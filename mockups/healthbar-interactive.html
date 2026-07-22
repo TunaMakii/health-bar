@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Health Bar — Interactive Prototype (MTG theme) v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Cinzel+Decorative:wght@700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+:root{
+  --table:#120d09; --leather:#1b130c; --card-black:#0a0705;
+  --gold:#c9a64b; --gold-hi:#e8cf8a; --gold-dk:#8a733f;
+  --parch:#efe4c3; --parch-dk:#d8c9a3; --ink:#1a1206;
+  --fg:#e9ddc0; --fg-dim:#a4936f;
+  --mw:#f8f6d8; --mu:#c1d7e9; --mb:#cac5c0; --mr:#e49977; --mg:#a3c095; --mc:#cbc9c8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;scrollbar-width:none}
+*::-webkit-scrollbar{display:none}
+input{user-select:text}
+body{background:radial-gradient(ellipse 90% 60% at 50% 0%,#241811 0%,var(--table) 60%);
+     color:var(--fg);font-family:'EB Garamond',serif;min-height:100vh;
+     display:flex;flex-direction:column;align-items:center;padding:28px 16px 48px}
+.pagehead{text-align:center;margin-bottom:22px}
+.pagehead h1{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:26px;letter-spacing:3px;
+   background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-dk));-webkit-background-clip:text;background-clip:text;color:transparent}
+.pagehead .sub{color:var(--fg-dim);font-size:14px;font-style:italic;margin-top:4px}
+
+.phone{width:375px;height:812px;background:var(--leather);border:8px solid #241a10;border-radius:44px;overflow:hidden;
+       position:relative;box-shadow:0 0 0 1px rgba(201,166,75,.35), 0 0 46px rgba(201,166,75,.12), 0 26px 60px rgba(0,0,0,.7);
+       display:flex;flex-direction:column;
+       background-image:radial-gradient(ellipse 120% 50% at 50% -5%,rgba(201,166,75,.10),transparent 60%)}
+.statusbar{height:30px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 22px;
+           font-size:12px;color:var(--fg-dim);letter-spacing:1px}
+.body{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.screen{display:none;flex:1;flex-direction:column;min-height:0}
+.screen.active{display:flex}
+
+.mana{border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+      border:1.5px solid rgba(0,0,0,.55);box-shadow:inset 0 -3px 6px rgba(0,0,0,.28), inset 0 2px 3px rgba(255,255,255,.55), 0 1px 3px rgba(0,0,0,.5)}
+.mana svg{width:58%;height:58%;fill:#0d0f0f}
+.m-lg{width:48px;height:48px}.m-md{width:30px;height:30px}.m-sm{width:20px;height:20px}
+.mana.sel{outline:3px solid var(--gold);outline-offset:3px;box-shadow:0 0 16px rgba(201,166,75,.65), inset 0 -3px 6px rgba(0,0,0,.28)}
+
+.appbar{display:flex;align-items:center;gap:10px;padding:8px 14px;flex:none}
+.appbar .title{font-family:'Cinzel',serif;font-weight:700;font-size:16px;letter-spacing:2px;color:var(--gold-hi)}
+.appbar .spacer{flex:1}
+.iconbtn{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--gold);cursor:pointer;flex:none}
+.iconbtn:active{background:rgba(201,166,75,.15)}
+.iconbtn.on{background:rgba(201,166,75,.22);box-shadow:0 0 10px rgba(201,166,75,.4)}
+.icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.icon-sm{width:16px;height:16px}
+.cta{font-family:'Cinzel',serif;font-weight:900;letter-spacing:2.5px;font-size:15px;color:var(--ink);text-align:center;
+     background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-dk));border-radius:14px;padding:15px;
+     border:1px solid #5c4a24;box-shadow:0 0 22px rgba(201,166,75,.28), inset 0 1px 0 rgba(255,255,255,.5);cursor:pointer}
+.cta:active{transform:scale(.97)}
+.ghostbtn{font-family:'Cinzel',serif;font-weight:700;letter-spacing:2px;font-size:14px;color:var(--gold);text-align:center;
+     border:1px solid var(--gold-dk);border-radius:14px;padding:14px;flex:1;cursor:pointer}
+.ghostbtn:active{background:rgba(201,166,75,.12)}
+.label{font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:9px;
+       display:flex;align-items:center;gap:10px}
+.label:after{content:'';height:1px;flex:1;background:linear-gradient(90deg,var(--gold-dk),transparent)}
+.chip{border:1px solid var(--gold-dk);background:linear-gradient(180deg,#241a10,#1b130c);border-radius:12px;padding:9px 0;text-align:center;
+      font-family:'Cinzel',serif;font-weight:700;font-size:15px;color:var(--fg-dim);flex:1;cursor:pointer}
+.chip.sel{color:var(--ink);background:linear-gradient(180deg,var(--parch),var(--parch-dk));border-color:var(--gold);
+          box-shadow:0 0 12px rgba(201,166,75,.4), inset 0 1px 0 rgba(255,255,255,.6)}
+.chip .csub{display:block;font-family:'EB Garamond',serif;font-weight:400;font-style:italic;font-size:11.5px;margin-top:1px}
+.row{display:flex;gap:10px}
+
+/* setup */
+.setup{padding:4px 20px 18px;display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto}
+.logo{font-family:'Cinzel Decorative',serif;font-weight:900;font-size:24px;letter-spacing:2px;text-align:center;margin-top:2px;
+      background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,var(--gold-dk));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logodeco{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:3px}
+.logodeco .line{height:1px;width:64px;background:linear-gradient(90deg,transparent,var(--gold-dk))}
+.logodeco .line.r{background:linear-gradient(90deg,var(--gold-dk),transparent)}
+.stepper{display:flex;align-items:center;gap:16px;justify-content:center}
+.stepbtn{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,#2a1e12,#1b130c);border:1.5px solid var(--gold-dk);
+         display:flex;align-items:center;justify-content:center;color:var(--gold);cursor:pointer;box-shadow:inset 0 1px 0 rgba(232,207,138,.25)}
+.stepbtn:active{transform:scale(.94)}
+.stepval{font-family:'Cinzel',serif;font-weight:900;font-size:36px;width:64px;text-align:center;color:var(--gold-hi);
+         text-shadow:0 0 14px rgba(201,166,75,.5)}
+.players{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:9px;border-radius:12px;padding:8px 10px;cursor:pointer;
+      background:linear-gradient(180deg,var(--parch),var(--parch-dk));border:1px solid var(--gold-dk);
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.25), 0 2px 6px rgba(0,0,0,.45);color:var(--ink)}
+.prow .pname{flex:1;font-family:'Cinzel',serif;font-weight:700;font-size:13.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .pcolor{font-size:12.5px;font-style:italic;color:#4a3a1c;white-space:nowrap}
+.prow .pbars{font-size:11px;color:#6b5527;white-space:nowrap}
+.ordbtn{width:26px;height:26px;border-radius:8px;border:1px solid var(--gold-dk);display:flex;align-items:center;justify-content:center;
+        color:#6b5527;background:rgba(255,255,255,.25);cursor:pointer;flex:none}
+.ordbtn:active{background:rgba(138,115,63,.3)}
+.ordbtn.dis{opacity:.25;pointer-events:none}
+.gdot{width:30px;height:30px;border-radius:50%;flex:none;border:1.5px solid rgba(0,0,0,.55);
+      box-shadow:inset 0 -2px 4px rgba(0,0,0,.25), inset 0 1px 2px rgba(255,255,255,.5)}
+
+/* edit planeswalker */
+.picker{padding:4px 20px 18px;display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto}
+.nameinput{width:100%;font-family:'Cinzel',serif;font-weight:700;font-size:15px;color:var(--ink);
+           background:linear-gradient(180deg,var(--parch),var(--parch-dk));border:1px solid var(--gold-dk);border-radius:12px;
+           padding:11px 14px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.manarow{display:flex;justify-content:space-between}
+.manarow .mana:not(.sel){opacity:.45}
+.colorprev{display:flex;align-items:center;gap:10px;margin-top:12px;border:1px solid var(--gold-dk);
+           border-radius:12px;padding:8px 12px;background:linear-gradient(180deg,#241a10,#1b130c)}
+.colorprev .cpbar{flex:1;height:10px;border-radius:99px;background:rgba(0,0,0,.5);overflow:hidden}
+.colorprev .cpname{font-family:'Cinzel',serif;font-weight:700;font-size:12px;color:var(--fg)}
+.pickhint{font-size:11.5px;font-style:italic;color:var(--fg-dim);margin-top:7px;text-align:center}
+.barrow{display:flex;align-items:center;gap:10px;border-radius:12px;padding:9px 12px;
+        background:linear-gradient(180deg,var(--parch),var(--parch-dk));border:1px solid var(--gold-dk);color:var(--ink)}
+.barrow .bn{flex:1;font-family:'Cinzel',serif;font-weight:700;font-size:12.5px}
+.barrow .bv{font-family:'Cinzel',serif;font-weight:900;font-size:13px;color:#4a3a1c}
+.barrow .del{color:#8a3324;cursor:pointer;display:flex}
+.addbar{border:2px dashed var(--gold-dk);border-radius:13px;padding:12px;text-align:center;color:var(--gold);cursor:pointer;
+        font-family:'Cinzel',serif;font-weight:700;font-size:12.5px;letter-spacing:1px;
+        display:flex;align-items:center;justify-content:center;gap:8px}
+.addbar:active{background:rgba(201,166,75,.1)}
+
+/* game */
+.game{flex:1;display:grid;gap:7px;padding:7px;min-height:0}
+.panel{border-radius:14px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+       border:3px solid var(--card-black);box-shadow:inset 0 0 0 2px rgba(201,166,75,.5), 0 3px 10px rgba(0,0,0,.6);
+       padding:9px 9px 10px;gap:4px;justify-content:space-between;cursor:pointer}
+.panel.arr{box-shadow:inset 0 0 0 3px var(--gold), 0 0 16px rgba(201,166,75,.5)}
+.panel.swapsel{box-shadow:inset 0 0 0 4px var(--gold-hi), 0 0 26px rgba(232,207,138,.8);transform:scale(.97)}
+.flip{transform:rotate(180deg)}
+.flip.swapsel{transform:rotate(180deg) scale(.97)}
+.titlebar{width:100%;display:flex;align-items:center;gap:6px;padding:1px 0 0 4px;color:#fdf6e3;position:relative;z-index:2}
+.titlebar .tname{font-family:'Cinzel',serif;font-weight:700;font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                 text-shadow:0 1px 5px rgba(0,0,0,.8);letter-spacing:.5px}
+.titlebar .mana{width:15px;height:15px;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.titlebar .gdot{width:16px;height:16px}
+.menubtn{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+         color:rgba(253,246,227,.65);background:transparent;border:none;cursor:pointer;flex:none}
+.menubtn:active{background:rgba(255,255,255,.14)}
+.lifewrap{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;justify-content:center;width:100%;min-height:0}
+.life{font-family:'Cinzel',serif;font-weight:900;font-size:52px;line-height:1;color:#fdf6e3;
+      text-shadow:0 2px 10px rgba(0,0,0,.8), 0 0 22px rgba(255,255,255,.18);transition:transform .12s}
+.life.bump{transform:scale(1.12)}
+.pend{position:absolute;top:34px;right:8px;font-family:'Cinzel',serif;font-weight:700;font-size:15px;z-index:4;
+      background:rgba(0,0,0,.5);border:1px solid var(--gold-dk);border-radius:99px;padding:2px 9px;color:var(--gold-hi)}
+.bar{width:86%;height:12px;border-radius:99px;background:rgba(0,0,0,.55);overflow:hidden;
+     border:1px solid var(--gold-dk);box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+.fill{height:100%;border-radius:99px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35);transition:width .25s ease-out}
+.pm{position:absolute;top:0;bottom:0;width:50%;display:flex;align-items:center;padding:0 8px;
+    color:rgba(253,246,227,.35);font-family:'Cinzel',serif;font-size:24px;font-weight:700;z-index:0;pointer-events:none}
+.pm.minus{left:0}.pm.plus{right:0;justify-content:flex-end}
+.lifewrap{position:relative}
+.panel.hastok .life{font-size:42px}
+.panel.hastok .pm{font-size:19px;padding:0 4px}
+.panel.hastok.dense .life{font-size:30px}
+.cmdstrip{width:92%;display:flex;align-items:center;gap:6px;position:relative;z-index:2;
+          background:rgba(0,0,0,.4);border:1px solid var(--gold-dk);border-radius:99px;padding:3px 5px;
+          box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+.cmdstrip .cicon{width:13px;height:13px;stroke:var(--gold-hi);fill:none;stroke-width:2.2;flex:none}
+.cmdstrip .cval{font-family:'Cinzel',serif;font-weight:700;font-size:14px;color:#fdf6e3;min-width:20px;text-align:center}
+.cmdstrip .cbar{flex:1;height:7px;border-radius:99px;background:rgba(0,0,0,.5);overflow:hidden;border:1px solid rgba(138,115,63,.6)}
+.cmdstrip .cfill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-dk),var(--gold-hi));transition:width .25s ease-out}
+.cmdstrip .cbtn{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+                font-family:'Cinzel',serif;font-weight:700;font-size:16px;color:var(--gold-hi);cursor:pointer;
+                background:rgba(0,0,0,.35);border:1px solid var(--gold-dk)}
+.cmdstrip .cbtn:active{transform:scale(.9);background:rgba(201,166,75,.25)}
+.strips{width:92%;display:flex;flex-direction:column;gap:4px;position:relative;z-index:2}
+.panelbody{flex:1;width:100%;display:flex;gap:6px;min-height:0;min-width:0;position:relative;z-index:1}
+.pleft{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+       position:relative;min-width:0;gap:4px;padding-bottom:2px}
+.pleft .strips{width:96%}
+.pright{width:44%;background:rgba(5,3,2,.78);border-radius:10px;padding:5px;display:flex;flex-direction:column;
+        gap:4px;overflow-y:auto;z-index:2;border:1px solid rgba(201,166,75,.25)}
+.tkhead{font-family:'Cinzel',serif;font-weight:700;font-size:9px;letter-spacing:2px;color:var(--gold);
+        text-align:center;padding:1px 0;flex:none}
+.tokitem{background:rgba(255,255,255,.05);border:1px solid rgba(201,166,75,.35);border-radius:8px;
+         padding:5px 7px;cursor:pointer;flex:none}
+.tokitem:active{background:rgba(201,166,75,.15)}
+.tkname{font-family:'Cinzel',serif;font-weight:700;font-size:10.5px;color:#fdf6e3;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkstats{display:flex;align-items:center;gap:5px;margin-top:3px}
+.tkpt{font-family:'Cinzel',serif;font-weight:700;font-size:11px;color:#9ed3ae}
+.tkcnt{font-family:'Cinzel',serif;font-weight:700;font-size:10px;color:var(--fg-dim)}
+.tkbar{flex:1;height:5px;border-radius:99px;background:rgba(0,0,0,.6);border:1px solid rgba(138,115,63,.5);overflow:hidden;display:none}
+.device-tablet .tkbar{display:block}
+.tkfill{height:100%;background:linear-gradient(90deg,#1e5c3c,#5aae7c)}
+.tkctr{font-size:9.5px;font-family:'Cinzel',serif;font-weight:700;color:var(--gold-hi)}
+/* in-panel token editor: slides out to the left of the token column */
+@keyframes slideL{from{transform:translateX(28%);opacity:0}to{transform:none;opacity:1}}
+.panel.editing .pleft{visibility:hidden}
+.panel.editing .pend{display:none}
+.tokedit{position:absolute;top:0;bottom:0;left:0;right:calc(44% + 6px);z-index:8;
+         background:#0a0603;border:1px solid var(--gold);border-radius:10px;
+         display:flex;flex-direction:column;gap:4px;padding:6px 7px;animation:slideL .18s ease-out;
+         box-shadow:0 0 18px rgba(0,0,0,.6);overflow-y:auto}
+.tokedit>*{flex:none}
+.tehead{display:flex;align-items:center;gap:5px}
+.tename{font-family:'Cinzel',serif;font-weight:700;font-size:11px;color:var(--gold-hi);flex:1;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.teic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+      color:var(--gold);cursor:pointer;flex:none}
+.teic:active{background:rgba(201,166,75,.2)}
+.teic .icon{width:13px;height:13px}
+.tept{font-family:'Cinzel',serif;font-weight:900;font-size:19px;color:#9ed3ae;text-align:center;line-height:1}
+.tept span{font-size:12px;color:var(--fg-dim)}
+.tectr{text-align:center;font-style:italic;color:var(--fg-dim);font-size:10px}
+.tegrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;align-content:start}
+.tb{text-align:center;padding:5px 0;border-radius:8px;background:rgba(0,0,0,.45);cursor:pointer;
+    border:1px solid var(--gold-dk);font-family:'Cinzel',serif;font-weight:700;font-size:10.5px;color:var(--fg)}
+.tb:active{transform:scale(.94);background:rgba(201,166,75,.2)}
+.tb.minus{color:#e8927c}.tb.plus{color:#9ed3ae}
+.tedestroy{text-align:center;padding:5px 0;border-radius:8px;border:1px solid #8a3324;color:#e8927c;cursor:pointer;
+           font-family:'Cinzel',serif;font-weight:700;font-size:10px;letter-spacing:1.5px}
+.tedestroy:active{background:rgba(138,51,36,.25)}
+.device-tablet .tokedit{right:calc(34% + 6px);padding:12px;gap:8px;border-radius:12px}
+.device-tablet .tename{font-size:16px}
+.device-tablet .tept{font-size:30px}
+.device-tablet .tept span{font-size:17px}
+.device-tablet .tectr{font-size:13px}
+.device-tablet .tb{font-size:14px;padding:9px 0}
+.device-tablet .tedestroy{font-size:13px;padding:9px 0}
+.device-tablet .teic{width:32px;height:32px}
+.device-tablet .teic .icon{width:17px;height:17px}
+.device-tablet .pright{width:34%;padding:8px;gap:6px}
+.device-tablet .tkhead{font-size:12px}
+.device-tablet .tkname{font-size:15px}
+.device-tablet .tkpt{font-size:15px}
+.device-tablet .tkbar{height:8px}
+.device-tablet .tkctr{font-size:13px}
+.device-tablet .tokitem{padding:8px 10px}
+.deadovl{position:absolute;inset:0;background:rgba(6,4,2,.84);z-index:5;display:flex;flex-direction:column;
+         align-items:center;justify-content:center;gap:9px}
+.deadovl .skull{width:42px;height:42px;fill:#e8927c;filter:drop-shadow(0 0 12px rgba(232,146,124,.5))}
+.deadtxt{font-family:'Cinzel',serif;font-weight:900;letter-spacing:3px;color:#e8927c;font-size:19px;
+         text-shadow:0 0 16px rgba(232,146,124,.45)}
+.revive{border:1px solid var(--gold-dk);border-radius:99px;padding:7px 18px;color:var(--gold);cursor:pointer;
+        font-family:'Cinzel',serif;font-weight:700;font-size:11px;letter-spacing:2px;background:rgba(0,0,0,.4)}
+.revive:active{background:rgba(201,166,75,.2)}
+.device-tablet .deadovl .skull{width:64px;height:64px}
+.device-tablet .deadtxt{font-size:30px}
+
+/* ── stage scaling + fit-window responsive mode ── */
+.stage{display:flex;justify-content:center;transform-origin:top center}
+.device-fit .phone{width:calc(100vw - 20px);height:calc(100vh - 150px);min-height:420px;border-radius:18px;border-width:4px}
+.device-fit .life{font-size:clamp(34px,11vmin,120px)}
+.device-fit .panel.dense .life{font-size:clamp(28px,7vmin,64px)}
+.device-fit .bar{height:clamp(9px,1.6vmin,18px)}
+.device-fit .titlebar .tname{font-size:clamp(12px,2vmin,18px)}
+.device-fit .cmdstrip .cbtn{width:clamp(24px,4.5vmin,40px);height:clamp(24px,4.5vmin,40px)}
+.device-fit .cmdstrip .cval{font-size:clamp(12px,2vmin,17px)}
+.device-fit .pm{font-size:clamp(22px,5vmin,44px)}
+.device-fit .deadtxt{font-size:clamp(16px,3.5vmin,32px)}
+.device-fit .tkname{font-size:clamp(10px,1.8vmin,16px)}
+.device-fit .tkpt{font-size:clamp(10px,1.8vmin,16px)}
+.device-fit .tept{font-size:clamp(17px,3.5vmin,32px)}
+.device-fit .tb{font-size:clamp(10px,1.8vmin,15px);padding:clamp(4px,1vmin,10px) 0}
+.device-fit .setup,.device-fit .picker,.device-fit .detail{width:100%;max-width:560px;margin:0 auto}
+
+/* ── turn-based single view: left player rail + solo panel ── */
+.siderail{width:102px;flex:none;display:flex;flex-direction:column;gap:6px;align-items:stretch;
+          padding:8px 0 8px 8px;overflow-y:auto;scrollbar-width:none}
+.siderail::-webkit-scrollbar{display:none}
+.roundtag{font-family:'Cinzel',serif;font-weight:900;font-size:11px;letter-spacing:1px;color:var(--gold);
+          border:1px solid var(--gold-dk);border-radius:12px;padding:4px 10px;text-align:center;flex:none}
+.pchip{display:flex;flex-direction:column;align-items:stretch;gap:3px;border:1px solid var(--gold-dk);
+       border-radius:12px;padding:7px 8px;cursor:pointer;background:linear-gradient(180deg,#241a10,#1b130c);flex:none}
+.pchip:active{transform:scale(.95)}
+.pchip .top{display:flex;align-items:center;gap:4px;min-width:0}
+.pchip .nm{font-family:'Cinzel',serif;font-weight:700;font-size:9.5px;letter-spacing:0;color:var(--fg);flex:1;min-width:0;
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pchip .lv{text-align:center}
+.device-fit .siderail{width:clamp(112px,14vw,190px)}
+.device-fit .pchip .nm{font-size:clamp(9.5px,1.6vmin,14px)}
+.device-fit .pchip .lv{font-size:clamp(12px,2vmin,17px)}
+.pchip .chipskull{align-self:center}
+.device-tablet .siderail{width:170px;gap:8px;padding:10px 0 10px 10px}
+.device-tablet .pchip{padding:10px 12px;gap:8px}
+.device-tablet .pchip .nm{font-size:14px}
+.device-tablet .pchip .lv{font-size:16px}
+.device-tablet .roundtag{font-size:14px;padding:6px 12px}
+.pchip .lv{font-family:'Cinzel',serif;font-weight:900;font-size:12px;color:var(--gold-hi)}
+.pchip.turn{background:linear-gradient(180deg,var(--parch),var(--parch-dk));border-color:var(--gold);
+            box-shadow:0 0 10px rgba(201,166,75,.45)}
+.pchip.turn .nm{color:var(--ink)} .pchip.turn .lv{color:#7a2a1c}
+.pchip.view{outline:2px solid rgba(253,246,227,.6);outline-offset:1px}
+.pchip.deadc{opacity:.55}
+.pchip.swapsel{outline:3px solid var(--gold-hi);outline-offset:1px;transform:scale(.95)}
+.chipskull{width:13px;height:13px;fill:#e8927c}
+.mainwrap{flex:1;display:flex;padding:6px 8px;min-height:0;min-width:0}
+.mainwrap .panel{flex:1;min-width:0}
+.endturn{margin:4px 10px 8px;padding:13px;flex:none;font-size:13.5px}
+.panel.solo .life{font-size:100px}
+.panel.solo.hastok .life{font-size:70px}
+.panel.solo .pm{font-size:40px;padding:0 20px}
+.panel.solo .bar{height:16px}
+.panel.solo .strips{width:88%;gap:6px}
+.panel.solo .cmdstrip{padding:4px 7px;gap:8px}
+.panel.solo .cmdstrip .cbtn{width:38px;height:38px;font-size:19px}
+.panel.solo .cmdstrip .cval{font-size:16px;min-width:26px}
+.panel.solo .cmdstrip .cicon{width:16px;height:16px}
+.panel.solo .cmdstrip .cbar{height:9px}
+.panel.solo .titlebar .tname{font-size:16px}
+.panel.solo .titlebar .mana{width:18px;height:18px}
+.panel.solo .titlebar .gdot{width:19px;height:19px}
+.panel.solo .menubtn{width:38px;height:38px}
+.panel.solo .pright{width:38%;padding:8px;gap:6px}
+.panel.solo .tokedit{right:calc(38% + 6px);padding:10px;gap:7px}
+.panel.solo .tkname{font-size:11px}
+.panel.solo .tkpt{font-size:11.5px}
+.panel.solo .tkcnt{font-size:10.5px}
+.device-tablet .panel.solo .tkname{font-size:14px}
+.device-tablet .panel.solo .tkpt{font-size:14px}
+.device-tablet .panel.solo .tkcnt{font-size:13px}
+.panel.solo .tkbar{display:block;height:7px}
+.panel.solo .tkhead{font-size:11px}
+.panel.solo .tept{font-size:26px}
+.panel.solo .tb{font-size:13px;padding:8px 0}
+.panel.solo .tename{font-size:12px}
+.panel.solo .tedestroy{font-size:12px;padding:8px 0}
+.device-fit .panel.solo .life{font-size:clamp(56px,18vmin,150px)}
+.device-fit .panel.solo.hastok .life{font-size:clamp(40px,12vmin,110px)}
+
+/* ── turn transition animations ── */
+.animrow{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px auto 0;max-width:660px}
+.achip{border:1px solid var(--gold-dk);background:linear-gradient(180deg,#241a10,#1b130c);border-radius:99px;
+       padding:5px 13px;font-family:'Cinzel',serif;font-weight:700;font-size:10.5px;letter-spacing:1.5px;
+       color:var(--fg-dim);cursor:pointer}
+.achip.sel{color:var(--ink);background:linear-gradient(180deg,var(--parch),var(--parch-dk));border-color:var(--gold);
+           box-shadow:0 0 10px rgba(201,166,75,.4)}
+.mainwrap{perspective:1200px;position:relative}
+.fx{position:absolute;inset:6px 8px;pointer-events:none;z-index:20;border-radius:14px;overflow:hidden}
+@keyframes flashfade{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+@keyframes irisgrow{to{width:175%;height:175%;opacity:0}}
+
+/* 1 · Draw Slide — card drawn off the deck */
+.anim-slide{animation:a-slide .32s cubic-bezier(.2,.8,.3,1)}
+@keyframes a-slide{from{transform:translateX(70%);opacity:0}}
+.anim-slide-rev{animation:a-slide-rev .32s cubic-bezier(.2,.8,.3,1)}
+@keyframes a-slide-rev{from{transform:translateX(-70%);opacity:0}}
+
+/* 2 · Planeswalk — step through a violet portal */
+.anim-walk{animation:a-walk .55s cubic-bezier(.2,.8,.3,1)}
+@keyframes a-walk{0%{transform:scale(1.6);opacity:0;filter:hue-rotate(150deg) brightness(2.4) blur(6px)}
+  55%{opacity:1;filter:hue-rotate(40deg) brightness(1.3) blur(0)}100%{transform:none;filter:none}}
+.fx-walk .iris{position:absolute;left:50%;top:50%;width:36px;height:36px;border-radius:50%;opacity:.95;
+  border:3px solid #a78bfa;box-shadow:0 0 34px #7c3aed,inset 0 0 34px #7c3aed;
+  transform:translate(-50%,-50%);animation:irisgrow .55s ease-out forwards}
+
+/* 3 · Combat Slash — each slash cuts the old card open, exposing the next one through the cut */
+.anim-slash{animation:a-slash .85s ease-out}
+@keyframes a-slash{0%,55%{transform:none}62%{transform:translate(-3px,2px)}
+  72%{transform:translate(3px,-2px)}82%{transform:translate(-2px,1px)}100%{transform:none}}
+/* cover = a live snapshot of the outgoing card, quartered by the two cuts */
+.fx-slash .cp{position:absolute;inset:0;background:var(--pg,linear-gradient(165deg,#2a1e12,#160f09));
+  box-shadow:inset 0 0 0 2px rgba(201,166,75,.4)}
+.fx-slash .cpw{position:absolute;inset:0;display:flex}
+.fx-slash .cpw .panel{flex:1}
+.fx-slash .cpt{clip-path:polygon(0 0,100% 0,100% 22%,50% 50%,0 22%);animation:cpfly-t .85s ease-in forwards}
+.fx-slash .cpb{clip-path:polygon(0 100%,100% 100%,100% 78%,50% 50%,0 78%);animation:cpfly-b .85s ease-in forwards}
+.fx-slash .cpl{clip-path:polygon(0 22%,50% 50%,0 78%);animation:cpfly-l .85s ease-in forwards}
+.fx-slash .cpr{clip-path:polygon(100% 22%,50% 50%,100% 78%);animation:cpfly-r .85s ease-in forwards}
+/* slash 1 (~30%): halves part slightly → first sliver of the new board shows through the cut
+   slash 2 (~60%): four pieces fly apart → full reveal */
+@keyframes cpfly-t{0%,30%{transform:none}36%,64%{transform:translate(-10px,-14px)}70%{opacity:1}
+  100%{transform:translate(-8%,-120%) rotate(-4deg);opacity:0}}
+@keyframes cpfly-l{0%,30%{transform:none}36%,64%{transform:translate(-10px,-14px)}70%{opacity:1}
+  100%{transform:translate(-130%,6%) rotate(-5deg);opacity:0}}
+@keyframes cpfly-b{0%,30%{transform:none}36%,64%{transform:translate(10px,14px)}70%{opacity:1}
+  100%{transform:translate(8%,120%) rotate(4deg);opacity:0}}
+@keyframes cpfly-r{0%,30%{transform:none}36%,64%{transform:translate(10px,14px)}70%{opacity:1}
+  100%{transform:translate(130%,-6%) rotate(5deg);opacity:0}}
+.fx-slash .sl{position:absolute;left:-20%;top:50%;width:140%;height:4px;opacity:0;z-index:2;
+  background:linear-gradient(90deg,transparent,#fff 45%,#ffe9b0 55%,transparent);
+  box-shadow:0 0 18px #fff;animation:slashsweep .26s ease-out forwards}
+@keyframes slashsweep{0%{opacity:1;transform:rotate(var(--a)) scaleX(0)}
+  70%{opacity:1;transform:rotate(var(--a)) scaleX(1)}100%{opacity:0;transform:rotate(var(--a)) scaleX(1)}}
+.fx-slash .spark{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;opacity:0;z-index:3;
+  background:#ffe9b0;box-shadow:0 0 12px #ffd28a;animation:sparkfly .38s ease-out .5s forwards}
+@keyframes sparkfly{0%{opacity:1;transform:translate(-50%,-50%)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy)))}}
+
+@media (prefers-reduced-motion: reduce){
+  [class*="anim-"]{animation:none!important}
+  .fx{display:none}
+}
+.panel.dense .life{font-size:36px}
+.panel.dense .bar{height:9px}
+.panel.dense .cmdstrip{padding:2px 4px;gap:4px}
+.panel.dense .cmdstrip .cbtn{width:21px;height:21px;font-size:13px}
+.panel.dense .cmdstrip .cval{font-size:11.5px;min-width:16px}
+.panel.dense .cmdstrip .cicon{width:11px;height:11px}
+.badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;position:relative;z-index:2}
+.badge{font-size:10.5px;font-weight:600;background:linear-gradient(180deg,var(--parch),var(--parch-dk));color:var(--ink);
+       border:1px solid var(--gold-dk);border-radius:99px;padding:2px 8px;box-shadow:0 1px 3px rgba(0,0,0,.45)}
+.hint{flex:none;text-align:center;font-size:11.5px;font-style:italic;color:var(--fg-dim);padding:3px 0 19px}
+.hint.warn{color:var(--gold-hi)}
+
+/* detail */
+.detail{flex:1;display:flex;flex-direction:column;gap:11px;padding:4px 16px 16px;overflow-y:auto}
+.cardbar{border-radius:13px;border:2.5px solid var(--card-black);box-shadow:inset 0 0 0 2px rgba(201,166,75,.5), 0 3px 8px rgba(0,0,0,.55);
+         padding:8px 10px 10px;display:flex;flex-direction:column;gap:7px}
+.cardbar .head{display:flex;align-items:center;gap:7px}
+.cardbar .btitle{flex:1;display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,var(--parch),var(--parch-dk));
+                 border:1px solid var(--gold-dk);border-radius:7px;padding:4px 8px;color:var(--ink);min-width:0;
+                 box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.cardbar .bname{font-family:'Cinzel',serif;font-weight:700;font-size:11.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cardbar .del{color:#8a3324;cursor:pointer;display:flex}
+.pt{font-family:'Cinzel',serif;font-weight:900;font-size:16px;color:var(--ink);background:linear-gradient(180deg,var(--parch),var(--parch-dk));
+    border:1.5px solid var(--gold-dk);border-radius:9px;padding:3px 9px;box-shadow:0 2px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.55);
+    white-space:nowrap}
+.pt .den{font-size:11.5px;color:#6b5527}
+.track{height:14px;border-radius:99px;background:rgba(0,0,0,.55);border:1px solid var(--gold-dk);overflow:hidden;
+       box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}
+.ctrl{display:flex;gap:6px}
+.ctrl .b{flex:1;text-align:center;padding:8px 0;border-radius:10px;background:rgba(0,0,0,.4);cursor:pointer;
+         border:1px solid var(--gold-dk);font-family:'Cinzel',serif;font-weight:700;font-size:13px;color:var(--fg)}
+.ctrl .b:active{transform:scale(.95);background:rgba(201,166,75,.18)}
+.ctrl .b.minus{color:#e8927c}.ctrl .b.plus{color:#9ed3ae}.ctrl .b.x{color:var(--gold-hi)}
+
+/* overlays */
+.ovl{position:absolute;inset:0;background:rgba(6,4,2,.78);display:none;flex-direction:column;justify-content:flex-end;z-index:10}
+.ovl.open{display:flex}
+.sheet{background:linear-gradient(180deg,#2a1e12,#1b130c);border-radius:26px 26px 0 0;border-top:2px solid var(--gold-dk);
+       padding:18px 18px 24px;display:flex;flex-direction:column;gap:13px;box-shadow:0 -8px 30px rgba(0,0,0,.6)}
+.sheet .target{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--fg-dim);font-style:italic}
+.sheet .target b{font-family:'Cinzel',serif;font-style:normal;font-weight:700;color:var(--fg);font-size:13.5px}
+.amount{font-family:'Cinzel',serif;font-size:48px;font-weight:900;text-align:center;text-shadow:0 0 18px rgba(232,146,124,.35)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.key{height:52px;border-radius:12px;background:linear-gradient(180deg,#241a10,#1b130c);border:1px solid var(--gold-dk);cursor:pointer;
+     display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:19px;color:var(--fg)}
+.key:active{transform:scale(.95);background:rgba(201,166,75,.15)}
+.key.op{color:var(--gold)}
+.applyrow{display:flex;gap:10px}
+.applyrow .cta{flex:1.4;padding:13px}
+.sheettitle{font-family:'Cinzel',serif;font-weight:700;letter-spacing:2px;font-size:14px;color:var(--gold-hi);text-align:center}
+.opt{display:flex;align-items:center;gap:10px;border:1px solid var(--gold-dk);border-radius:12px;padding:12px 14px;cursor:pointer;
+     background:linear-gradient(180deg,#241a10,#1b130c)}
+.opt:active{background:rgba(201,166,75,.12)}
+.opt .on{font-family:'Cinzel',serif;font-weight:700;font-size:13.5px;color:var(--fg);flex:1}
+.opt .os{font-size:12px;font-style:italic;color:var(--fg-dim)}
+.toksearch{width:100%;font-family:'EB Garamond',serif;font-size:15px;color:var(--fg);background:rgba(0,0,0,.35);
+           border:1px solid var(--gold-dk);border-radius:12px;padding:10px 14px;outline:none}
+.toksearch::placeholder{color:var(--fg-dim);font-style:italic}
+.toklist{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:2px}
+.tokrow{display:flex;align-items:center;gap:10px;border:1px solid var(--gold-dk);border-radius:10px;padding:9px 12px;cursor:pointer;
+        background:linear-gradient(180deg,#241a10,#1b130c);flex:none}
+.tokrow:active{background:rgba(201,166,75,.12)}
+.tokrow .tn{font-family:'Cinzel',serif;font-weight:700;font-size:12.5px;color:var(--fg);flex:1}
+.tokrow .tp{font-size:12px;font-style:italic;color:var(--fg-dim)}
+.dicelist{display:flex;flex-direction:column;gap:8px}
+.drow{display:flex;align-items:center;gap:10px;font-size:15px;padding:8px 12px;border-radius:10px;border:1px solid transparent}
+.drow b{font-family:'Cinzel',serif;font-size:14px}
+.drow .dv{margin-left:auto;font-family:'Cinzel',serif;font-weight:900;font-size:20px;color:var(--gold-hi)}
+.drow.win{border-color:var(--gold);background:rgba(201,166,75,.12);box-shadow:0 0 12px rgba(201,166,75,.25)}
+.confirmtext{text-align:center;font-size:16px;font-style:italic;color:var(--fg);padding:4px 10px}
+
+/* ── device toggle ── */
+.devtoggle{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.dchip{border:1px solid var(--gold-dk);background:linear-gradient(180deg,#241a10,#1b130c);border-radius:99px;padding:7px 22px;
+       font-family:'Cinzel',serif;font-weight:700;font-size:12px;letter-spacing:2px;color:var(--fg-dim);cursor:pointer}
+.dchip.sel{color:var(--ink);background:linear-gradient(180deg,var(--parch),var(--parch-dk));border-color:var(--gold);
+           box-shadow:0 0 12px rgba(201,166,75,.4)}
+
+/* ── tablet mode (landscape slate) ── */
+.device-tablet .phone{width:1080px;height:780px;border-radius:34px}
+.device-tablet .game{gap:10px;padding:10px}
+.device-tablet .life{font-size:92px}
+.device-tablet .bar{height:16px;width:72%}
+.device-tablet .strips{width:72%;gap:6px}
+.device-tablet .titlebar{padding:3px 2px 0 8px}
+.device-tablet .titlebar .tname{font-size:17px}
+.device-tablet .titlebar .mana{width:19px;height:19px}
+.device-tablet .titlebar .gdot{width:20px;height:20px}
+.device-tablet .menubtn{width:40px;height:40px}
+.device-tablet .pm{font-size:42px;padding:0 28px}
+.device-tablet .cmdstrip{padding:4px 7px;gap:8px;border-radius:99px}
+.device-tablet .cmdstrip .cbtn{width:36px;height:36px;font-size:19px}
+.device-tablet .cmdstrip .cval{font-size:16px;min-width:28px}
+.device-tablet .cmdstrip .cicon{width:16px;height:16px}
+.device-tablet .cmdstrip .cbar{height:9px}
+.device-tablet .setup,.device-tablet .picker,.device-tablet .detail{width:100%;max-width:560px;margin:0 auto}
+.device-tablet .detail .cardbar{padding:12px 14px 14px}
+.device-tablet .hint{font-size:13.5px}
+
+/* ═══════════ polish pass — depth · texture · lighting · micro-interactions ═══════════
+   visual-only layer: same selectors, same layout, richer rendering. */
+:root{
+  --e1:0 1px 3px rgba(0,0,0,.5);
+  --e2:0 3px 10px rgba(0,0,0,.5);
+  --e3:0 10px 28px rgba(0,0,0,.55);
+  --tap:.15s cubic-bezier(.2,.8,.3,1);
+}
+
+/* ambient — candlelit table with a faint vellum grain over everything */
+body{background:
+  radial-gradient(ellipse 70% 46% at 50% 8%,rgba(201,166,75,.10),transparent 60%),
+  radial-gradient(ellipse 90% 60% at 50% 0%,#291b11 0%,var(--table) 62%),#0c0805}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* device frame — deeper bezel, warmer halo */
+.phone{border-color:#2b2013;
+  box-shadow:0 0 0 1px rgba(201,166,75,.5), 0 0 0 4px #040201, 0 0 70px rgba(201,166,75,.13),
+             0 34px 90px rgba(0,0,0,.8), inset 0 1px 0 rgba(232,207,138,.12)}
+
+/* universal micro-interactions: smooth state changes + visible keyboard focus */
+.iconbtn,.chip,.prow,.stepbtn,.ordbtn,.cta,.ghostbtn,.key,.tb,.cbtn,.pchip,.tokitem,
+.menubtn,.revive,.addbar,.del,.teic,.tedestroy,.mana,.achip,.dchip,.barrow,.drow{
+  transition:transform var(--tap),background var(--tap),box-shadow var(--tap),
+             border-color var(--tap),color var(--tap),opacity var(--tap),filter var(--tap)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (hover:hover){
+  .iconbtn:hover{background:rgba(201,166,75,.10)}
+  .chip:not(.sel):hover,.pchip:not(.turn):hover,.key:hover,.tb:hover,.achip:not(.sel):hover,
+  .dchip:not(.sel):hover{border-color:var(--gold);color:var(--fg)}
+  .cta:hover{filter:brightness(1.08)}
+  .ghostbtn:hover,.revive:hover{background:rgba(201,166,75,.10)}
+  .prow:hover{box-shadow:inset 0 0 0 2px rgba(255,255,255,.25), 0 4px 12px rgba(0,0,0,.55)}
+  .tokitem:hover{background:rgba(201,166,75,.12)}
+  .cbtn:hover,.menubtn:hover,.teic:hover,.ordbtn:hover{background:rgba(255,255,255,.10)}
+  .stepbtn:hover{border-color:var(--gold);box-shadow:0 0 10px rgba(201,166,75,.35), inset 0 1px 0 rgba(232,207,138,.25)}
+}
+
+/* gold call-to-action — pressed metal: gloss line, letterpress text, real travel on press */
+.cta{position:relative;text-shadow:0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 2px 0 #55431f, 0 7px 18px rgba(0,0,0,.5), 0 0 24px rgba(201,166,75,.22), inset 0 1px 0 rgba(255,255,255,.65)}
+.cta:active{transform:translateY(2px);
+  box-shadow:0 0 0 #55431f, 0 3px 8px rgba(0,0,0,.5), 0 0 14px rgba(201,166,75,.2), inset 0 1px 0 rgba(255,255,255,.5)}
+
+/* parchment surfaces — paper fiber + a cleaner engraved edge */
+.prow,.nameinput,.chip.sel{background:
+  repeating-linear-gradient(2deg,rgba(122,94,44,.05) 0 1px,transparent 1px 3px),
+  linear-gradient(180deg,var(--parch),var(--parch-dk))}
+.pchip.turn{background:
+  repeating-linear-gradient(2deg,rgba(122,94,44,.06) 0 1px,transparent 1px 3px),
+  linear-gradient(180deg,var(--parch),var(--parch-dk));
+  box-shadow:0 0 12px rgba(201,166,75,.5), var(--e1), inset 0 1px 0 rgba(255,255,255,.55)}
+
+/* battlefield card — layered card-frame lighting: gold trim, top sheen, bottom vignette */
+.panel{border-width:2.5px;
+  box-shadow:inset 0 0 0 2px rgba(201,166,75,.55), inset 0 0 0 3px rgba(0,0,0,.35),
+             inset 0 18px 40px rgba(255,255,255,.055), inset 0 -26px 48px rgba(0,0,0,.38), var(--e3)}
+.panel.arr{box-shadow:inset 0 0 0 3px var(--gold), inset 0 -26px 48px rgba(0,0,0,.38), 0 0 16px rgba(201,166,75,.5)}
+.panel.swapsel{box-shadow:inset 0 0 0 4px var(--gold-hi), 0 0 26px rgba(232,207,138,.8);transform:scale(.97)}
+.titlebar .tname{letter-spacing:.8px;text-shadow:0 1px 2px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.5)}
+.life{text-shadow:0 3px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.28), 0 0 30px rgba(253,246,227,.28)}
+.pend{box-shadow:var(--e2), inset 0 1px 0 rgba(232,207,138,.2);backdrop-filter:blur(2px)}
+
+/* meters — glassy trough, lit fill edge */
+.bar{box-shadow:inset 0 2px 5px rgba(0,0,0,.65), inset 0 -1px 0 rgba(255,255,255,.07), 0 1px 0 rgba(255,255,255,.06)}
+.fill{box-shadow:inset 0 1px 0 rgba(255,255,255,.5), inset 0 -2px 3px rgba(0,0,0,.35), 0 0 8px rgba(255,255,255,.12)}
+.cmdstrip{background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,.32));
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.55), inset 0 -1px 0 rgba(232,207,138,.07), 0 1px 3px rgba(0,0,0,.3)}
+.cmdstrip .cbtn{box-shadow:inset 0 1px 0 rgba(232,207,138,.15), 0 1px 2px rgba(0,0,0,.4)}
+.cmdstrip .cfill,.tkfill{box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+
+/* token column & slide-out editor — deeper black glass */
+.pright{background:linear-gradient(180deg,rgba(6,4,2,.9),rgba(5,3,2,.72));
+  box-shadow:inset 0 1px 0 rgba(232,207,138,.08), inset 0 0 18px rgba(0,0,0,.5)}
+.tokitem{box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 1px 3px rgba(0,0,0,.35)}
+.tokedit{background:linear-gradient(180deg,#0d0805,#080502);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 8px 28px rgba(0,0,0,.7), inset 0 1px 0 rgba(232,207,138,.14)}
+
+/* sheets & dialogs — dimmer scrim, blur, candle-lit rim, soft rise */
+.ovl{background:rgba(4,2,1,.62);backdrop-filter:blur(3px)}
+.sheet{border-top-color:var(--gold);
+  box-shadow:0 -20px 60px rgba(0,0,0,.65), inset 0 1px 0 rgba(232,207,138,.22)}
+.key:active,.tb:active{box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
+
+/* bottom-center tool drawer — collapsed to a small tab, swipes up over the battlefield */
+.sidedrawer{position:absolute;left:50%;bottom:0;transform:translate(-50%,calc(100% + 6px));z-index:20;
+  display:flex;flex-direction:row;gap:10px;padding:11px 15px;
+  background:linear-gradient(180deg,#241a10,#170f09);border:1px solid rgba(201,166,75,.4);border-bottom:none;
+  border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(232,207,138,.14);
+  transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.sidedrawer.open{transform:translate(-50%,0)}
+.sidedrawer .iconbtn{width:42px;height:42px;border-radius:50%;border:1px solid rgba(201,166,75,.3);
+  background:linear-gradient(180deg,#241a10,#170f09);
+  box-shadow:inset 0 1px 0 rgba(232,207,138,.14), 0 2px 6px rgba(0,0,0,.45)}
+.sidedrawer .iconbtn:active{transform:translateY(1px);background:rgba(201,166,75,.15)}
+.sidedrawer .iconbtn.off{opacity:.38}
+.drawerhandle{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:78px;height:15px;z-index:21;cursor:pointer;
+  border:1px solid rgba(201,166,75,.45);border-bottom:none;border-radius:10px 10px 0 0;
+  background:linear-gradient(180deg,#241a10,#170f09);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 -3px 10px rgba(0,0,0,.4)}
+.drawerhandle::after{content:'';width:38px;height:3px;border-radius:99px;
+  background:linear-gradient(90deg,var(--gold-dk),var(--gold),var(--gold-dk))}
+.drawerscrim{position:absolute;inset:0;z-index:19;display:none;background:rgba(4,2,1,.3)}
+.edgezone{position:absolute;left:10%;right:10%;bottom:0;height:14px;z-index:18}
+.roundtag{background:rgba(0,0,0,.3);box-shadow:inset 0 1px 0 rgba(232,207,138,.14)}
+.pchip{box-shadow:var(--e1), inset 0 1px 0 rgba(232,207,138,.08)}
+.deadovl{background:radial-gradient(ellipse 80% 70% at 50% 45%,rgba(20,8,5,.82),rgba(4,2,1,.94))}
+
+/* gentle life in the chrome — all disabled under reduced motion */
+@media (prefers-reduced-motion:no-preference){
+  .ovl.open .sheet{animation:sheetrise .26s cubic-bezier(.2,.9,.3,1)}
+  @keyframes sheetrise{from{transform:translateY(26px);opacity:.5}}
+  .pchip.turn{animation:turnglow 2.8s ease-in-out infinite}
+  @keyframes turnglow{50%{box-shadow:0 0 20px rgba(201,166,75,.72), var(--e1), inset 0 1px 0 rgba(255,255,255,.55)}}
+  .deadovl .skull{animation:skullpulse 3s ease-in-out infinite}
+  @keyframes skullpulse{50%{filter:drop-shadow(0 0 20px rgba(232,146,124,.75))}}
+  .screen.active{animation:scrfade .22s ease-out}
+  @keyframes scrfade{from{opacity:.55}}
+}
+
+/* ═══ deep polish — ornament · foil · watermarks · trails ═══ */
+.statusbar{letter-spacing:2px}
+/* grab-notch on every bottom sheet */
+.sheet::before{content:'';align-self:center;width:44px;height:4px;border-radius:99px;flex:none;opacity:.8;
+  background:linear-gradient(90deg,transparent,var(--gold-dk) 25%,var(--gold) 50%,var(--gold-dk) 75%,transparent)}
+/* playmat glow pooled under the active board */
+.mainwrap{background:radial-gradient(ellipse 75% 60% at 50% 50%,rgba(201,166,75,.055),transparent 72%)}
+/* engraved circular plates for the bottom dock */
+/* scroll edges dissolve instead of clipping */
+.siderail{mask-image:linear-gradient(180deg,transparent,#000 10px,#000 calc(100% - 12px),transparent);
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 10px,#000 calc(100% - 12px),transparent)}
+.pright{mask-image:linear-gradient(180deg,#000,#000 calc(100% - 14px),transparent);
+  -webkit-mask-image:linear-gradient(180deg,#000,#000 calc(100% - 14px),transparent)}
+/* filigree corner brackets, like a framed card */
+.pcor{position:absolute;width:12px;height:12px;z-index:3;pointer-events:none;border:0 solid rgba(232,207,138,.5)}
+.pcor.tl{top:6px;left:6px;border-top-width:1.5px;border-left-width:1.5px;border-top-left-radius:5px}
+.pcor.tr{top:6px;right:6px;border-top-width:1.5px;border-right-width:1.5px;border-top-right-radius:5px}
+.pcor.bl{bottom:6px;left:6px;border-bottom-width:1.5px;border-left-width:1.5px;border-bottom-left-radius:5px}
+.pcor.br{bottom:6px;right:6px;border-bottom-width:1.5px;border-right-width:1.5px;border-bottom-right-radius:5px}
+/* damage trail: the red ghost lingers where life just was, then drains after the fill */
+.bar{position:relative}
+.bar .fill{position:absolute;left:0;top:0;bottom:0}
+.bar .gfill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;
+  background:rgba(226,116,90,.55);transition:width 1s ease .35s}
+@media (prefers-reduced-motion:reduce){.bar .gfill{transition:none}}
+/* pending badge speaks in color: gain green, loss ember */
+.pend.gain{color:#9ed3ae;border-color:rgba(90,174,124,.7);text-shadow:0 0 10px rgba(158,211,174,.5)}
+.pend.loss{color:#e8927c;border-color:rgba(138,51,36,.8);text-shadow:0 0 10px rgba(232,146,124,.5)}
+/* matched pool sections: name above, − value + row, bar beneath */
+.pool{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%}
+.poolname{font-family:'Cinzel',serif;font-weight:700;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(253,246,227,.8);text-shadow:0 1px 3px rgba(0,0,0,.75)}
+.poolrow{display:flex;align-items:center;justify-content:center;gap:16px;width:100%}
+.pbtn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+  font-family:'Cinzel',serif;font-weight:700;font-size:21px;color:var(--gold-hi);cursor:pointer;
+  background:rgba(0,0,0,.35);border:1px solid var(--gold-dk);
+  box-shadow:inset 0 1px 0 rgba(232,207,138,.15), 0 1px 3px rgba(0,0,0,.4);
+  transition:transform var(--tap),background var(--tap)}
+.pbtn:active{transform:scale(.9);background:rgba(201,166,75,.25)}
+.pooldiv{width:64%;height:1px;flex:none;margin:7px 0 5px;
+  background:linear-gradient(90deg,transparent,rgba(232,207,138,.45),transparent)}
+/* commander number = life number: same face, size, and shadows in every mode */
+.cmdval{font-family:'Cinzel',serif;font-weight:900;font-size:52px;line-height:1;color:#fdf6e3;
+  text-shadow:0 3px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.28), 0 0 30px rgba(253,246,227,.28)}
+.panel.solo .cmdval{font-size:100px}
+.panel.solo.hastok .cmdval{font-size:70px}
+.panel.solo.hastok.dense .cmdval{font-size:30px}
+.device-fit .panel.solo .cmdval{font-size:clamp(56px,18vmin,150px)}
+.device-fit .panel.solo.hastok .cmdval{font-size:clamp(40px,12vmin,110px)}
+.panel.solo.hastok .pbtn{width:34px;height:34px;font-size:18px}
+.device-tablet .poolname{font-size:14px}
+.device-tablet .pbtn{width:50px;height:50px;font-size:26px}
+/* each rail chip carries its owner's colors on the spine */
+.pchip{position:relative;overflow:hidden}
+.pchip::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--pcgrad,var(--gold-dk));opacity:.85}
+/* ═══ full-bleed board (phones / portrait) — no frame, color edge-to-edge ═══ */
+.game.bleedmode{padding:0;gap:0}
+.game.bleedmode .mainwrap{padding:0;background:none}
+.game.bleedmode .panel{border-radius:0;border:none;
+  box-shadow:inset 0 26px 46px rgba(0,0,0,.22), inset 0 -46px 70px rgba(0,0,0,.35)}
+.game.bleedmode .pcor{display:none}
+/* rail becomes floating translucent pills over the board */
+.game.bleedmode .siderail{position:absolute;left:8px;top:44px;bottom:auto;width:auto;z-index:6;
+  padding:0;gap:7px;background:transparent;mask-image:none;-webkit-mask-image:none}
+.game.bleedmode .roundtag{background:rgba(10,6,3,.6);backdrop-filter:blur(3px);font-size:10px;padding:3px 8px}
+.game.bleedmode .pchip{flex-direction:row;align-items:center;gap:6px;border-radius:99px;padding:4px 10px 4px 5px;
+  background:rgba(10,6,3,.55);backdrop-filter:blur(3px);border-color:rgba(201,166,75,.45)}
+.game.bleedmode .pchip::before{display:none}
+.game.bleedmode .pchip .nm{display:none}
+.game.bleedmode .pchip .lv{font-size:12px}
+.game.bleedmode .pchip.turn{background:rgba(239,228,195,.92);animation:none}
+/* tokens: right column becomes a translucent bottom row */
+.game.bleedmode .panelbody{flex-direction:column;gap:4px}
+.game.bleedmode .pright{width:100%;flex:none;flex-direction:row;justify-content:center;gap:6px;
+  background:transparent;border:none;box-shadow:none;padding:0 10px 24px;
+  overflow-x:auto;overflow-y:hidden;mask-image:none;-webkit-mask-image:none}
+.game.bleedmode .tkhead{display:none}
+.game.bleedmode .tokitem{flex:none;width:104px;background:rgba(10,6,3,.55);backdrop-filter:blur(3px);
+  border-color:rgba(201,166,75,.4)}
+.game.bleedmode .tkbar{display:block;height:5px}
+/* token editor rises from the bottom, above the token row — clear of the player pills */
+.game.bleedmode .tokedit{left:9%;right:9%;top:auto;bottom:96px;max-height:56%;border-radius:14px;
+  border-color:var(--gold);box-shadow:0 18px 50px rgba(0,0,0,.7), inset 0 1px 0 rgba(232,207,138,.14);
+  animation:teup .2s ease-out}
+@keyframes teup{from{transform:translateY(20px);opacity:0}}
+.game.bleedmode .panel.editing .pleft{visibility:visible;filter:blur(2px) brightness(.6)}
+/* pools stay full-size — the bottom token row steals no width */
+.game.bleedmode .panel.solo .life,.game.bleedmode .panel.solo .cmdval{font-size:84px}
+.game.bleedmode .panel.solo.hastok .life,.game.bleedmode .panel.solo.hastok .cmdval{font-size:72px}
+.game.bleedmode .panel.solo.hastok .pbtn{width:40px;height:40px;font-size:21px}
+.game.bleedmode .panel.solo.hastok.dense .life,.game.bleedmode .panel.solo.hastok.dense .cmdval{font-size:52px}
+/* tablet full-bleed keeps the black token cutout: pools shift left, tokens dock right */
+.device-tablet .game.bleedmode .panelbody{flex-direction:row;gap:8px}
+.device-tablet .game.bleedmode .pright{width:34%;flex:initial;flex-direction:column;justify-content:flex-start;
+  background:linear-gradient(180deg,rgba(6,4,2,.9),rgba(5,3,2,.72));border:1px solid rgba(201,166,75,.25);
+  border-radius:10px;padding:8px;gap:6px;overflow-y:auto;overflow-x:hidden;
+  box-shadow:inset 0 1px 0 rgba(232,207,138,.08), inset 0 0 18px rgba(0,0,0,.5);
+  mask-image:linear-gradient(180deg,#000,#000 calc(100% - 14px),transparent);
+  -webkit-mask-image:linear-gradient(180deg,#000,#000 calc(100% - 14px),transparent)}
+.device-tablet .game.bleedmode .tkhead{display:block}
+.device-tablet .game.bleedmode .tokitem{width:auto;background:rgba(255,255,255,.05);
+  backdrop-filter:none;border-color:rgba(201,166,75,.35)}
+.device-tablet .game.bleedmode .tokedit{left:14px;right:calc(34% + 16px);top:14px;bottom:30px;max-height:none;
+  border-radius:12px;animation:slideL .18s ease-out}
+.device-tablet .game.bleedmode .panel.editing .pleft{visibility:hidden;filter:none}
+/* solo on a big screen: let the numbers use the acreage */
+.device-tablet .game.bleedmode .panel.solo .life,
+.device-tablet .game.bleedmode .panel.solo .cmdval{font-size:150px}
+.device-tablet .game.bleedmode .panel.solo.hastok .life,
+.device-tablet .game.bleedmode .panel.solo.hastok .cmdval{font-size:110px}
+/* hint floats over the gradient so the board truly reaches the bottom */
+.game.bleedmode + .hint{position:absolute;left:0;right:0;bottom:15px;z-index:5;padding:0;
+  pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+
+/* slow foil shimmer over the two title marks */
+@media (prefers-reduced-motion:no-preference){
+  .pagehead h1,.logo{
+    background:linear-gradient(100deg,var(--gold-dk) 0%,var(--gold) 22%,#fff3cf 40%,var(--gold-hi) 50%,#fff3cf 60%,var(--gold) 78%,var(--gold-dk) 100%);
+    background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:foilsweep 7s linear infinite}
+  @keyframes foilsweep{from{background-position:200% 0}to{background-position:-200% 0}}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="sy-w" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6"/><g stroke="#0d0f0f" stroke-width="2.2" stroke-linecap="round"><path d="M12 2.2v3.1M12 18.7v3.1M2.2 12h3.1M18.7 12h3.1M5.1 5.1l2.2 2.2M16.7 16.7l2.2 2.2M18.9 5.1l-2.2 2.2M7.3 16.7l-2.2 2.2"/></g></symbol>
+    <symbol id="sy-u" viewBox="0 0 24 24"><path d="M12 2.4C9.2 7.2 5.8 10.4 5.8 14.4a6.2 6.2 0 0 0 12.4 0c0-4-3.4-7.2-6.2-12z"/></symbol>
+    <symbol id="sy-b" viewBox="0 0 24 24"><path d="M12 3.2a6.6 6.6 0 0 0-6.6 6.6c0 2.6 1.5 4.3 3.1 5.5v3.4c0 .6.5 1.1 1.1 1.1h4.8c.6 0 1.1-.5 1.1-1.1v-3.4c1.6-1.2 3.1-2.9 3.1-5.5A6.6 6.6 0 0 0 12 3.2zm-2.6 8.2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5.2 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM10.6 17v-1.6h.9V17h1v-1.6h.9V17z"/></symbol>
+    <symbol id="sy-r" viewBox="0 0 24 24"><path d="M12 2.6c1.2 3.2-1.4 4.6-1.4 6.8 0 1.2 1 2.2 2.3 2.2 1.2 0 2.2-1 2.2-2.4 1.8 1.6 2.9 3.5 2.9 5.5A6 6 0 0 1 6 14.7c0-4.6 4.2-7.2 6-12.1z"/></symbol>
+    <symbol id="sy-g" viewBox="0 0 24 24"><path d="M12 2.4 7.4 9h2.4l-4.2 6.4h5.2V21h2.4v-5.6h5.2L14.2 9h2.4z"/></symbol>
+    <symbol id="sy-c" viewBox="0 0 24 24"><path d="M12 3l2.3 4.4L19 9l-3.3 3.6.7 5-4.4-2-4.4 2 .7-5L5 9l4.7-1.6z"/></symbol>
+  </defs>
+</svg>
+
+<div class="pagehead">
+  <h1>Health Bar</h1>
+  <div class="sub">Interactive prototype v2 — game modes, pre-game bars, rainbow decks, seat swapping, panel menus.</div>
+  <div class="devtoggle">
+    <div class="dchip sel" id="dev-phone" onclick="setDevice('phone')">PHONE</div>
+    <div class="dchip" id="dev-tablet" onclick="setDevice('tablet')">TABLET</div>
+    <div class="dchip" id="dev-fit" onclick="setDevice('fit')">FIT WINDOW</div>
+  </div>
+  <div class="animrow" id="animrow"></div>
+</div>
+
+<div class="stage" id="stage">
+<div class="phone">
+  <div class="statusbar"><span>9:41</span><span>▲ ▮ 100%</span></div>
+  <div class="body">
+
+    <div class="screen active" id="scr-setup">
+      <div class="setup">
+        <div>
+          <div class="logo">Health Bar</div>
+          <div class="logodeco">
+            <div class="line"></div>
+            <div class="mana m-sm" style="background:var(--mr)"><svg><use href="#sy-r"/></svg></div>
+            <div class="line r"></div>
+          </div>
+        </div>
+        <div>
+          <div class="label">Game Mode</div>
+          <div class="row" id="moderow"></div>
+        </div>
+        <div class="row" style="align-items:flex-end">
+          <div style="flex:1">
+            <div class="label">Planeswalkers</div>
+            <div class="stepper">
+              <div class="stepbtn" onclick="chgCount(-1)"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></div>
+              <div class="stepval" id="pcount">4</div>
+              <div class="stepbtn" onclick="chgCount(1)"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="label">Starting Life</div>
+          <div class="row" id="liferow"></div>
+        </div>
+        <div style="flex:1">
+          <div class="label">The Table</div>
+          <div class="players" id="plist"></div>
+        </div>
+        <div class="cta" onclick="startGame()">⚔ &nbsp;BEGIN THE DUEL&nbsp; ⚔</div>
+      </div>
+    </div>
+
+    <div class="screen" id="scr-edit">
+      <div class="appbar">
+        <div class="iconbtn" onclick="closeEdit()"><svg class="icon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="title" id="edit-title">Edit Planeswalker</div>
+      </div>
+      <div class="picker" id="edit-body"></div>
+    </div>
+
+    <div class="screen" id="scr-game">
+      <div class="game" id="grid"></div>
+      <div class="hint" id="hint">tap half: −1 / +1 · scroll icon on a name: player menu</div>
+      <div class="drawerscrim" id="drawerscrim" onclick="setDrawer(false)"></div>
+      <div class="sidedrawer" id="sidedrawer" onclick="if(event.target.closest('.iconbtn')&&!event.target.closest('#sndbtn'))setTimeout(()=>setDrawer(false),120)">
+        <div class="iconbtn" onclick="show('setup')" title="Setup"><svg class="icon" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="iconbtn" onclick="rollDice()" title="Roll"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg></div>
+        <div class="iconbtn" id="btn-arr" onclick="toggleRearrange()" title="Swap seats"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></div>
+        <div class="iconbtn" onclick="openOvl('ovl-reset')" title="Reset"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></div>
+        <div class="iconbtn" onclick="addPlayerLive()" title="Add player"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a5 5 0 0 1 5-5h4"/><path d="M19 8v6M16 11h6"/></svg></div>
+        <div class="iconbtn" id="sndbtn" onclick="toggleSound()" title="Sound"><svg class="icon" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></div>
+      </div>
+      <div class="drawerhandle" id="drawerhandle" title="Tools"></div>
+      <div class="edgezone" id="edgezone"></div>
+    </div>
+
+    <div class="screen" id="scr-detail">
+      <div class="appbar" id="detail-appbar"></div>
+      <div class="detail" id="detail-body"></div>
+    </div>
+
+    <!-- keypad -->
+    <div class="ovl" id="ovl-keypad">
+      <div class="sheet">
+        <div class="target" id="kp-target"></div>
+        <div class="amount" id="kp-amount">−0</div>
+        <div class="keys" id="kp-keys"></div>
+        <div class="applyrow">
+          <div class="ghostbtn" onclick="closeOvl()">CANCEL</div>
+          <div class="cta" id="kp-apply" onclick="kpApply()">APPLY</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- add bar -->
+    <div class="ovl" id="ovl-addbar">
+      <div class="sheet">
+        <div class="sheettitle">SUMMON ANOTHER BAR</div>
+        <div class="opt" onclick="addBar('cmd')"><svg class="icon" style="color:var(--gold)" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg><div class="on">Commander Health</div><div class="os">21 / 21</div></div>
+        <div class="opt" onclick="addBar('poison')"><svg class="icon" style="color:var(--gold)" viewBox="0 0 24 24"><path d="M12 2.4C9.2 7.2 5.8 10.4 5.8 14.4a6.2 6.2 0 0 0 12.4 0c0-4-3.4-7.2-6.2-12z"/></svg><div class="on">Poison Counters</div><div class="os">0 / 10</div></div>
+        <div class="opt" onclick="addBar('energy')"><svg class="icon" style="color:var(--gold)" viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><div class="on">Energy Counters</div><div class="os">0 / 20</div></div>
+        <div class="opt" onclick="addBar('token')"><svg class="icon" style="color:var(--gold)" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/></svg><div class="on">Tokens</div><div class="os">pick from all known tokens</div></div>
+        <div class="opt" onclick="addBar('extra')"><svg class="icon" style="color:var(--gold)" viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2C10.5 3.5 9.3 3 7.5 3A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></svg><div class="on">Extra Health Bar</div><div class="os">starts at game life</div></div>
+        <div class="opt" onclick="addBar('custom')"><svg class="icon" style="color:var(--gold)" viewBox="0 0 24 24"><path d="M12 2l7 10-7 10L5 12z"/></svg><div class="on">Custom Counter</div><div class="os">loyalty · experience · storm · anything</div></div>
+        <div class="ghostbtn" onclick="closeOvl()">CANCEL</div>
+      </div>
+    </div>
+
+    <!-- token picker -->
+    <div class="ovl" id="ovl-tokenpick">
+      <div class="sheet">
+        <div class="sheettitle">SUMMON TOKENS</div>
+        <input class="toksearch" id="toksearch" placeholder="Search tokens… (Food, Zombie, Treasure)" oninput="renderTokenList(this.value)">
+        <div class="toklist" id="toklist"></div>
+        <div class="ghostbtn" onclick="closeOvl()">CANCEL</div>
+      </div>
+    </div>
+
+    <!-- dice -->
+    <div class="ovl" id="ovl-dice">
+      <div class="sheet">
+        <div class="sheettitle">ROLL FOR FIRST</div>
+        <div class="dicelist" id="dicelist"></div>
+        <div class="applyrow">
+          <div class="ghostbtn" onclick="rollDice()">ROLL AGAIN</div>
+          <div class="cta" style="flex:1" onclick="closeOvl()">CLOSE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- reset confirm -->
+    <div class="ovl" id="ovl-reset">
+      <div class="sheet">
+        <div class="sheettitle">RESET</div>
+        <div class="confirmtext"><b>Reset Duel</b> — same planeswalkers; every bar returns to its starting value.<br>
+          <b>New Game</b> — back to setup: rename players, change colors, adjust everything, then begin anew.</div>
+        <div class="applyrow">
+          <div class="ghostbtn" onclick="closeOvl()">CANCEL</div>
+          <div class="cta" style="flex:1" onclick="doReset()">RESET DUEL</div>
+        </div>
+        <div class="cta" onclick="newGame()">NEW GAME</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+/* ───────── data ───────── */
+const MANA = {
+  W:{circle:'#f8f6d8', frameD:'#7a6b45', frameM:'#b9a06a', fill:'#e8e0c9', sym:'sy-w'},
+  U:{circle:'#c1d7e9', frameD:'#163a66', frameM:'#1b4e8c', fill:'#2c6fb5', sym:'sy-u'},
+  B:{circle:'#cac5c0', frameD:'#17141a', frameM:'#2e2a2b', fill:'#5c5470', sym:'sy-b'},
+  R:{circle:'#e49977', frameD:'#7d2822', frameM:'#a8352c', fill:'#c4462f', sym:'sy-r'},
+  G:{circle:'#a3c095', frameD:'#153f2a', frameM:'#1e5c3c', fill:'#5aae7c', sym:'sy-g'},
+  C:{circle:'#cbc9c8', frameD:'#3a3a3c', frameM:'#5a5a5e', fill:'#9fa4a8', sym:'sy-c'},
+};
+const COLOR_ORDER=['W','U','B','R','G','C'];
+const COLOR_NAMES={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'};
+function colorsName(cs){
+  if(cs.length===1) return COLOR_NAMES[cs[0]];
+  if(cs.length===5) return 'Rainbow';
+  return cs.join('');
+}
+/* first mono color no one is using yet, for freshly-added players */
+function nextColors(){
+  const c=COLOR_ORDER.slice(0,5).find(c=>!players.some(p=>p.colors.length===1&&p.colors[0]===c));
+  return [c||COLOR_ORDER[players.length%5]];
+}
+const BARDEFS={
+  cmd:{name:'Commander', value:21, max:21},
+  poison:{name:'Poison Counters', value:0, max:10},
+  energy:{name:'Energy Counters', value:0, max:20},
+  token:{name:'Token Squad', value:3, max:3, count:1},
+};
+/* [name, P/T or type, hp] — hp = toughness (1 for artifact & X/X tokens) */
+const TOKENS=[
+ ['Treasure','Artifact',1],['Food','Artifact',1],['Clue','Artifact',1],['Blood','Artifact',1],['Gold','Artifact',1],
+ ['Map','Artifact',1],['Powerstone','Artifact',1],['Junk','Artifact',1],['Incubator','Artifact',1],
+ ['Angel','4/4',4],['Bear','2/2',2],['Beast','3/3',3],['Bird','1/1',1],['Boar','2/2',2],['Cat','1/1',1],
+ ['Centaur','3/3',3],['Citizen','1/1',1],['Cleric','1/1',1],['Construct','1/1',1],['Copy','X/X',1],
+ ['Demon','5/5',5],['Devil','1/1',1],['Dinosaur','3/3',3],['Dog','1/1',1],['Dragon','5/5',5],['Drake','2/2',2],
+ ['Eldrazi','10/10',10],['Eldrazi Scion','1/1',1],['Elemental','3/1',1],['Elephant','3/3',3],['Elf Warrior','1/1',1],
+ ['Faerie','1/1',1],['Frog','1/1',1],['Germ','0/0',1],['Goblin','1/1',1],['Golem','3/3',3],['Griffin','2/2',2],
+ ['Human','1/1',1],['Hydra','X/X',1],['Illusion','1/1',1],['Insect','1/1',1],['Knight','2/2',2],['Kraken','8/8',8],
+ ['Merfolk','1/1',1],['Myr','1/1',1],['Ogre','3/3',3],['Ooze','2/2',2],['Pegasus','1/1',1],['Pest','1/1',1],
+ ['Phyrexian Mite','1/1',1],['Pirate','1/1',1],['Plant','0/1',1],['Rat','1/1',1],['Rebel','1/1',1],['Rhino','4/4',4],
+ ['Saproling','1/1',1],['Satyr','1/1',1],['Servo','1/1',1],['Shapeshifter','1/1',1],['Sliver','1/1',1],['Snake','1/1',1],
+ ['Soldier','1/1',1],['Spider','1/2',2],['Spirit','1/1',1],['Squirrel','1/1',1],['Thopter','1/1',1],['Vampire','2/2',2],
+ ['Warrior','1/1',1],['Wolf','2/2',2],['Wurm','6/6',6],['Zombie','2/2',2],
+];
+const STRIPMETA={
+  cmd:{icon:'<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>', grad:'linear-gradient(90deg,#8a733f,#e8cf8a)'},
+  poison:{icon:'<path d="M12 2.4C9.2 7.2 5.8 10.4 5.8 14.4a6.2 6.2 0 0 0 12.4 0c0-4-3.4-7.2-6.2-12z"/>', grad:'linear-gradient(90deg,#4a7a2c,#8fbf5e)'},
+  energy:{icon:'<path d="M13 2 3 14h7l-1 8 10-12h-7z"/>', grad:'linear-gradient(90deg,#4a90c9,#c1d7e9)'},
+  token:{icon:'<path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/>', grad:'linear-gradient(90deg,#1e5c3c,#5aae7c)'},
+  extra:{icon:'<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2C10.5 3.5 9.3 3 7.5 3A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>', grad:null},
+  custom:{icon:'<path d="M12 2l7 10-7 10L5 12z"/>', grad:'linear-gradient(90deg,#6b5527,#c9a64b)'},
+};
+
+/* ───────── state ───────── */
+let mode='commander';          // 'normal' | 'commander'
+let device='phone';            // 'phone' | 'tablet'
+let curScreen='setup';
+let startLife=40;
+let players=[];
+let editIdx=null, editReturn='setup', detailIdx=null, kpCtx=null;
+let rearrange=false, swapSel=null;
+
+function lifeBar(){ return {type:'life', name:'Health', value:startLife, max:startLife}; }
+function makePlayer(n,colors){
+  const bars=[lifeBar()];
+  if(mode==='commander') bars.push({type:'cmd', ...BARDEFS.cmd});
+  return {name:'Player '+n, colors, bars, pending:0, ptimer:null, dead:false};
+}
+players=[makePlayer(1,['R','W']), makePlayer(2,['U','B']), makePlayer(3,['G']), makePlayer(4,['R','G'])];
+
+/* ───────── helpers ───────── */
+const $=id=>document.getElementById(id);
+function show(name){ curScreen=name;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $('scr-'+name).classList.add('active');
+  if(name==='setup') renderSetup(); if(name==='edit') renderEdit(); if(name==='game') renderGame(); if(name==='detail') renderDetail(); }
+function isWide(){ return device==='tablet' || (device==='fit' && window.innerWidth>window.innerHeight); }
+function updateWide(){ document.body.classList.toggle('device-tablet', isWide()); }
+function setDevice(d){ device=d;
+  document.body.classList.toggle('device-fit', d==='fit');
+  updateWide();
+  ['phone','tablet','fit'].forEach(k=>$('dev-'+k).classList.toggle('sel', d===k));
+  applyScale();
+  show(curScreen);
+}
+function applyScale(){
+  const st=$('stage');
+  if(device==='fit'){ st.style.transform=''; st.style.height=''; return; }
+  const fw = device==='tablet'?1096:391, fh = device==='tablet'?796:828;
+  const top = st.getBoundingClientRect().top;
+  const s = Math.min(1, (window.innerWidth-24)/fw, Math.max(200,(window.innerHeight-top-16))/fh);
+  st.style.transform = s<1 ? `scale(${s})` : '';
+  st.style.height = (fh*Math.min(1,s))+'px';
+}
+window.addEventListener('resize', ()=>{ applyScale(); if(device==='fit'){ updateWide(); show(curScreen); } });
+function openOvl(id){ document.querySelectorAll('.ovl').forEach(o=>o.classList.remove('open')); $(id).classList.add('open'); }
+function closeOvl(){ document.querySelectorAll('.ovl').forEach(o=>o.classList.remove('open')); }
+function manaHTML(k,size){ return `<div class="mana ${size}" style="background:${MANA[k].circle}"><svg><use href="#${MANA[k].sym}"/></svg></div>`; }
+function idBadgeHTML(colors,px){ // mana circles for 1-2 colors, conic dot for 3+
+  if(colors.length<=2) return colors.map(k=>manaHTML(k,'m-sm')).join('');
+  return `<div class="gdot" style="width:${px||20}px;height:${px||20}px;${dotStyle(colors)}"></div>`;
+}
+function dotStyle(colors){
+  if(colors.length===1) return `background:${MANA[colors[0]].circle}`;
+  if(colors.length===2) return `background:linear-gradient(135deg,${MANA[colors[0]].circle} 50%,${MANA[colors[1]].circle} 50%)`;
+  const seg=360/colors.length;
+  return `background:conic-gradient(${colors.map((c,i)=>`${MANA[c].circle} ${i*seg}deg ${(i+1)*seg}deg`).join(',')})`;
+}
+function frameGrad(colors){
+  if(colors.length===1){ const c=MANA[colors[0]]; return `linear-gradient(160deg,${c.frameD},${c.frameM} 55%,${c.frameD})`; }
+  if(colors.length===2){ const a=MANA[colors[0]], b=MANA[colors[1]];
+    return `linear-gradient(150deg,${a.frameD} 0%,${a.frameM} 45%,${b.frameM} 60%,${b.frameD} 100%)`; }
+  const stops=colors.map((c,i)=>`${MANA[c].frameM} ${Math.round(i/(colors.length-1)*100)}%`).join(',');
+  return `linear-gradient(150deg,${stops})`;
+}
+function fillGrad(colors){
+  if(colors.length===1){ const c=MANA[colors[0]]; return `linear-gradient(90deg,${c.frameM},${c.fill})`; }
+  const stops=colors.map((c,i)=>`${MANA[c].fill} ${Math.round(i/(colors.length-1)*100)}%`).join(',');
+  return `linear-gradient(90deg,${stops})`;
+}
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function checkState(i){
+  const p=players[i], was=p.dead;
+  p.bars=p.bars.filter(b=>!(b.type==='token' && (b.value<=0 || (b.count||0)<=0))); // dead squads vanish
+  p.dead = p.bars[0].value<=0
+        || p.bars.some(b=>b.type==='cmd' && b.value<=0)
+        || p.bars.some(b=>b.type==='poison' && b.value>=b.max);   // 10 poison = death
+  if(!was && p.dead) snd('death');
+}
+function revive(i){
+  const p=players[i];
+  p.bars.forEach(b=>{
+    if((b.type==='life'||b.type==='cmd') && b.value<=0) b.value=1;
+    if(b.type==='poison' && b.value>=b.max) b.value=b.max-1;
+  });
+  p.dead=false; renderGame();
+}
+function barSummary(b){ return b.type==='token' ? `${(b.power||0)+(b.counters||0)}/${b.value} ×${b.count}` : `${b.value} / ${b.max}`; }
+
+/* ───────── setup ───────── */
+function renderSetup(){
+  $('moderow').innerHTML=`
+    <div class="chip ${mode==='normal'?'sel':''}" onclick="setMode('normal')">NORMAL<span class="csub">20 life</span></div>
+    <div class="chip ${mode==='commander'?'sel':''}" onclick="setMode('commander')">COMMANDER<span class="csub">40 life · cmd bar</span></div>`;
+  $('pcount').textContent=players.length;
+  const presets=[20,30,40];
+  $('liferow').innerHTML = presets.map(v=>`<div class="chip ${startLife===v?'sel':''}" onclick="setLife(${v})">${v}</div>`).join('')
+    + `<div class="chip ${!presets.includes(startLife)?'sel':''}" onclick="customLife()">${!presets.includes(startLife)?startLife:'···'}</div>`;
+  $('plist').innerHTML = players.map((p,i)=>{
+    const cols=p.colors, extra=p.bars.length-1;
+    return `<div class="prow" onclick="openEdit(${i},'setup')">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <div class="ordbtn ${i===0?'dis':''}" onclick="event.stopPropagation();movePlayer(${i},-1)"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg></div>
+        <div class="ordbtn ${i===players.length-1?'dis':''}" onclick="event.stopPropagation();movePlayer(${i},1)"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+      <div class="gdot" style="${dotStyle(cols)}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="pname">${p.name}</div>
+        <div class="pbars">${extra>0? extra+' extra bar'+(extra>1?'s':'') : 'life only'}</div>
+      </div>
+      <div class="pcolor">${colorsName(cols)}</div>
+      <svg class="icon icon-sm" style="color:#6b5527" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+    </div>`;
+  }).join('');
+}
+function setMode(m){
+  mode=m;
+  startLife = m==='commander' ? 40 : 20;
+  players.forEach(p=>{
+    const lb=p.bars[0]; lb.value=startLife; lb.max=startLife;
+    const hasCmd=p.bars.some(b=>b.type==='cmd');
+    if(m==='commander' && !hasCmd) p.bars.push({type:'cmd', ...BARDEFS.cmd});
+    if(m==='normal') p.bars=p.bars.filter(b=>b.type!=='cmd');
+  });
+  renderSetup();
+}
+function setLife(v){ startLife=v;
+  players.forEach(p=>p.bars.forEach(b=>{ if(b.type==='life'||b.type==='extra'){ b.value=v; b.max=v; } }));
+  renderSetup(); }
+function customLife(){ const v=parseInt(prompt('Starting life:','25')); if(v>0) setLife(v); }
+function chgCount(d){
+  if(d>0 && players.length<6) players.push(makePlayer(players.length+1, nextColors()));
+  if(d<0 && players.length>1) players.pop();   // down to 1: solo / personal-device mode
+  renderSetup();
+}
+function movePlayer(i,d){ const j=i+d; if(j<0||j>=players.length) return;
+  [players[i],players[j]]=[players[j],players[i]]; renderSetup(); }
+function startGame(){
+  players.forEach(p=>p.bars.forEach(b=>{
+    if(b.type==='life'||b.type==='extra'||b.type==='cmd') b.value=b.max; // health pools full
+    else if(b.type==='poison'||b.type==='energy'||b.type==='custom') b.value=0; // counters empty
+    /* tokens keep whatever hp/count was configured */
+  }));
+  players.forEach(p=>{ p.pending=0; p.dead=false; clearTimeout(p.ptimer); });
+  rearrange=false; swapSel=null; turnIdx=0; viewIdx=0; round=1; show('game');
+}
+
+/* ───────── edit planeswalker (name + colors + bars, pre-game or in-game) ───────── */
+function openEdit(i,ret){ editIdx=i; editReturn=ret; show('edit'); }
+function closeEdit(){
+  if(editReturn==='game'){ viewIdx=editIdx; show('game'); return; } // land on the newcomer's board
+  show(editReturn==='detail' ? 'detail' : 'setup');
+}
+function renderEdit(){
+  const p=players[editIdx];
+  $('edit-title').textContent=p.name;
+  $('edit-body').innerHTML=`
+    <div>
+      <div class="label">Name</div>
+      <input class="nameinput" value="${p.name}" maxlength="14" onchange="players[${editIdx}].name=this.value.trim()||players[${editIdx}].name;renderEdit()">
+    </div>
+    <div>
+      <div class="label">Colors</div>
+      <div class="manarow">${COLOR_ORDER.map(c=>
+        `<div class="mana m-lg ${p.colors.includes(c)?'sel':''}" style="background:${MANA[c].circle};cursor:pointer" onclick="toggleColor('${c}')"><svg><use href="#${MANA[c].sym}"/></svg></div>`).join('')}
+      </div>
+      <div class="colorprev">
+        <div class="gdot" style="width:22px;height:22px;${dotStyle(p.colors)}"></div>
+        <div class="cpbar"><div style="height:100%;border-radius:99px;background:${fillGrad(p.colors)}"></div></div>
+        <div class="cpname">${colorsName(p.colors)}</div>
+      </div>
+      <div class="pickhint">tap symbols to mix any combination — all five for Rainbow</div>
+    </div>
+    <div>
+      <div class="label">Bars</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${p.bars.map((b,bi)=>`
+          <div class="barrow">
+            <div class="bn">${b.name}${b.type==='token'?' ×'+b.count:''}</div>
+            <div class="bv">${barSummary(b)}</div>
+            ${b.type!=='life'?`<div class="del" style="color:#6b5527" onclick="renameBarE(${bi})"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
+            <div class="del" onclick="players[${editIdx}].bars.splice(${bi},1);renderEdit()"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div>`:''}
+          </div>`).join('')}
+        <div class="addbar" onclick="openAddBar(${editIdx},'edit')">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> SUMMON ANOTHER BAR</div>
+      </div>
+    </div>
+    <div class="cta" onclick="closeEdit()">DONE</div>`;
+}
+function toggleColor(c){
+  const p=players[editIdx]; let cs=p.colors.slice();
+  if(c==='C'){ cs=['C']; }                               // colorless stands alone
+  else {
+    cs=cs.filter(x=>x!=='C');
+    if(cs.includes(c)){ if(cs.length>1) cs=cs.filter(x=>x!==c); } // never drop below one color
+    else cs.push(c);
+  }
+  p.colors=COLOR_ORDER.filter(x=>cs.includes(x));        // canonical WUBRG order
+  renderEdit();
+}
+
+/* ───────── add bar (shared by edit + detail) ───────── */
+let barCtx=null; // {idx, from:'edit'|'detail'}
+function openAddBar(idx,from){ barCtx={idx,from}; openOvl('ovl-addbar'); }
+function addBar(type){
+  if(type==='token'){ $('toksearch').value=''; renderTokenList(''); openOvl('ovl-tokenpick'); return; }
+  const p=players[barCtx.idx];
+  if(type==='custom'){
+    const n=prompt('Counter name:','Loyalty'); if(!n||!n.trim()) return;
+    const mx=parseInt(prompt('Counts up to (bar is full at):','10'));
+    p.bars.push({type:'custom', name:n.trim().slice(0,20), value:0, max:(mx>0?mx:10)});
+  }
+  else if(type==='extra') p.bars.push({type:'extra', name:'Health Bar '+(p.bars.filter(b=>b.type==='life'||b.type==='extra').length+1), value:startLife, max:startLife});
+  else p.bars.push({type, ...BARDEFS[type]});
+  closeOvl();
+  barCtx.from==='edit' ? renderEdit() : renderDetail();
+}
+function renderTokenList(q){
+  q=(q||'').trim().toLowerCase();
+  const hits=TOKENS.map((t,i)=>({t,i})).filter(x=>!q || x.t[0].toLowerCase().includes(q));
+  $('toklist').innerHTML =
+    `<div class="tokrow" onclick="addCustomToken()"><div class="tn">Custom Token…</div><div class="tp">name it yourself</div></div>`
+    + hits.map(x=>`<div class="tokrow" onclick="addToken(${x.i})"><div class="tn">${x.t[0]}</div><div class="tp">${x.t[1]}</div></div>`).join('')
+    + (hits.length? '' : `<div style="text-align:center;font-style:italic;color:var(--fg-dim);padding:8px">No token found — use Custom Token</div>`);
+}
+function pushToken(name,hp,power){
+  players[barCtx.idx].bars.push({type:'token', name, value:hp, max:hp, power:(power==null?hp:power), counters:0, count:1});
+  closeOvl();
+  barCtx.from==='edit' ? renderEdit() : renderDetail();
+}
+function addToken(i){ const t=TOKENS[i];
+  let power = t[1]==='Artifact' ? 0 : parseInt(t[1]);
+  if(isNaN(power)) power=t[2]; // X/X tokens
+  pushToken(t[0], t[2], power);
+}
+function addCustomToken(){
+  const n=prompt('Token name:','Token'); if(!n||!n.trim()) return;
+  const hp=parseInt(prompt('Token health:','1'))||1;
+  pushToken(n.trim().slice(0,20), hp);
+}
+function tokPT(b){ return `${(b.power||0)+(b.counters||0)}/${b.value}`; }
+
+/* ───────── game — turn-based single view ───────── */
+let turnIdx=0, viewIdx=0, round=1;
+function aliveCount(){ return players.filter(p=>!p.dead).length; }
+function nextAlive(from){ if(aliveCount()===0) return from; let i=from;
+  do{ i=(i+1)%players.length; }while(players[i].dead); return i; }
+function renderGame(){
+  const grid=$('grid');
+  grid.style.display='flex'; grid.style.flexDirection='row';
+  grid.style.gridTemplateColumns=''; grid.style.gridTemplateRows='';
+  const solo1 = players.length===1;   // personal-device mode: one player, board owns the screen
+  grid.classList.toggle('bleedmode', !isWide() || solo1);   // phones (and solo anywhere): edge-to-edge board
+  $('btn-arr').classList.toggle('on', rearrange);
+  const hint=$('hint');
+  if(rearrange){ hint.textContent='SWAP SEATS — tap two names to trade turn order'; hint.classList.add('warn'); }
+  else if(solo1){ hint.textContent='tap sides: −1/+1 · hold: menu · bottom tab: tools'; hint.classList.remove('warn'); }
+  else { hint.textContent='swipe left: next · swipe right: previous · tap sides: −1/+1 · hold: menu · bottom tab: tools'; hint.classList.remove('warn'); }
+  if(viewIdx>=players.length) viewIdx=players.length-1;
+  if(turnIdx>=players.length) turnIdx=players.length-1;
+  const chips= solo1 ? '' : `<div class="siderail"><div class="roundtag">R${round}</div>`+players.map((p,i)=>{
+    const ccols=p.colors;
+    const cls=['pchip',i===turnIdx?'turn':'',i===viewIdx?'view':'',p.dead?'deadc':'',rearrange&&swapSel===i?'swapsel':''].filter(Boolean).join(' ');
+    return `<div class="${cls}" style="--pcgrad:${fillGrad(ccols)}" onclick="chipTap(${i})">
+      <div class="top">
+        <div class="gdot" style="width:11px;height:11px;${dotStyle(ccols)}"></div>
+        <span class="nm">${p.name}</span>
+      </div>
+      ${p.dead?`<svg class="chipskull" viewBox="0 0 24 24"><use href="#sy-b"/></svg>`:`<span class="lv">${p.bars[0].value}</span>`}
+    </div>`;
+  }).join('')+`</div>`;
+  const idx=viewIdx, p=players[idx], cols=p.colors, lb=p.bars[0];
+  const pct = clamp(lb.value/lb.max*100,0,100);
+      let strips='', tokItems='', cmdpools='';
+      p.bars.forEach((b,bi)=>{
+        if(bi===0) return;
+        if(b.type==='cmd'){
+          const pctC=clamp(b.value/b.max*100,0,100);
+          cmdpools+=`<div class="pooldiv"></div>
+          <div class="pool cmd">
+            <div class="poolname">${b.name}</div>
+            <div class="poolrow">
+              <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();tapStrip(${idx},${bi},-1)">−</div>
+              <div class="cmdval" id="sv-${idx}-${bi}">${b.value}</div>
+              <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();tapStrip(${idx},${bi},1)">+</div>
+            </div>
+            <div class="bar cmdbar"><div class="fill" id="sf-${idx}-${bi}" style="width:${pctC}%;background:${STRIPMETA.cmd.grad}"></div></div>
+          </div>`;
+          return;
+        }
+        if(b.type==='token'){
+          const ctr=b.counters||0;
+          tokItems+=`<div class="tokitem" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();openTokEdit(${idx},${bi})">
+            <div class="tkname">${b.name}</div>
+            <div class="tkstats"><span class="tkpt">${tokPT(b)}</span><span class="tkcnt">×${b.count}</span>
+              <div class="tkbar"><div class="tkfill" style="width:${clamp(b.value/b.max*100,0,100)}%"></div></div>
+              ${ctr?`<span class="tkctr">${ctr>0?'+'+ctr:ctr}</span>`:''}
+            </div>
+          </div>`;
+          return;
+        }
+        const m=STRIPMETA[b.type]||STRIPMETA.extra;
+        const grad=m.grad||fillGrad(cols);
+        const pctS=clamp(b.value/b.max*100,0,100);
+        strips+=`<div class="cmdstrip" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()">
+          <div class="cbtn" onpointerup="event.stopPropagation();tapStrip(${idx},${bi},-1)">−</div>
+          <svg class="cicon" viewBox="0 0 24 24">${m.icon}</svg>
+          <span class="cval" id="sv-${idx}-${bi}">${b.value}</span>
+          <div class="cbar"><div class="cfill" id="sf-${idx}-${bi}" style="width:${pctS}%;background:${grad}"></div></div>
+          <div class="cbtn" onpointerup="event.stopPropagation();tapStrip(${idx},${bi},1)">+</div>
+        </div>`;
+      });
+      let tokedit='';
+      if(tokCtx && tokCtx.i===idx){
+        const b=p.bars[tokCtx.bi];
+        if(b && b.type==='token'){
+          const ctr=b.counters||0;
+          tokedit=`<div class="tokedit" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()">
+            <div class="tehead">
+              <div class="tename">${b.name}</div>
+              <div class="teic" onclick="tokRename()"><svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>
+              <div class="teic" onclick="closeTokEdit()"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+            </div>
+            <div class="tept">${tokPT(b)} <span>×${b.count}</span></div>
+            <div class="tectr">${ctr===0?'no counters':(ctr>0?'+'+ctr+'/+'+ctr+' counters':ctr+'/'+ctr+' counters')}</div>
+            <div class="tegrid">
+              <div class="tb plus" onclick="tokCtr(1)">+1/+1</div>
+              <div class="tb minus" onclick="tokCtr(-1)">−1/−1</div>
+              <div class="tb minus" onclick="tokHp(-1)">− hp</div>
+              <div class="tb plus" onclick="tokHp(1)">+ hp</div>
+              <div class="tb minus" onclick="tokCnt(-1)">− tok</div>
+              <div class="tb plus" onclick="tokCnt(1)">+ tok</div>
+            </div>
+            <div class="tedestroy" onclick="tokDelete()">DESTROY</div>
+          </div>`;
+        }
+      }
+      const nOther=1+p.bars.filter(b=>b.type!=='life'&&b.type!=='token').length;
+      const dense = !isWide() && (nOther>3 || (players.length>4 && nOther>2));
+      const panelHtml=`<div class="panel solo ${tokItems?'hastok':''} ${tokedit?'editing':''}"
+                  style="background:${frameGrad(cols)}" data-i="${idx}">
+        <i class="pcor tl"></i><i class="pcor tr"></i><i class="pcor bl"></i><i class="pcor br"></i>
+        ${p.pending? `<div class="pend ${p.pending>0?'gain':'loss'}" id="pend-${idx}">${p.pending>0?'+':''}${p.pending}</div>`:''}
+        <div class="titlebar">
+          <div class="tname">${p.name}</div>
+          ${idBadgeHTML(cols)}
+          <div class="menubtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();openDetail(${idx})">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </div>
+        </div>
+        <div class="panelbody">
+          <div class="pleft">
+            <div class="lifewrap">
+              <div class="pool">
+                <div class="poolname">${lb.name}</div>
+                <div class="poolrow">
+                  <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();tapLife(${idx},-1)">−</div>
+                  <div class="life" id="life-${idx}">${lb.value}</div>
+                  <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();tapLife(${idx},1)">+</div>
+                </div>
+                <div class="bar"><div class="gfill" id="gfill-${idx}" style="width:${pct}%"></div><div class="fill" id="fill-${idx}" style="width:${pct}%;background:${fillGrad(cols)}"></div></div>
+              </div>
+              ${cmdpools}
+            </div>
+            ${strips?`<div class="strips">${strips}</div>`:''}
+          </div>
+          ${tokItems?`<div class="pright" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()">
+            <div class="tkhead">TOKENS</div>${tokItems}</div>`:''}
+          ${tokedit}
+        </div>
+        ${p.dead?`<div class="deadovl">
+          <svg class="skull" viewBox="0 0 24 24"><use href="#sy-b"/></svg>
+          <div class="deadtxt">YOU'VE LOST</div>
+          <div class="revive" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();revive(${idx})">RESURRECT</div>
+        </div>`:''}
+      </div>`;
+  grid.innerHTML = chips + `<div class="mainwrap">${panelHtml}</div>`;
+  const pe=grid.querySelector('.panel'); if(pe) attachPanel(pe);
+}
+function chipTap(i){
+  if(rearrange){
+    if(swapSel===null) swapSel=i;
+    else if(swapSel!==i){
+      const tP=players[turnIdx], vP=players[viewIdx];
+      [players[swapSel],players[i]]=[players[i],players[swapSel]];
+      turnIdx=players.indexOf(tP); viewIdx=players.indexOf(vP);
+      swapSel=null;
+    } else swapSel=null;
+    renderGame(); return;
+  }
+  const changed = viewIdx!==i;
+  if(changed) capturePrev();
+  tokCtx=null; viewIdx=i; renderGame();
+  if(changed) playAnim();
+}
+function stepPlayer(dir){
+  if(players.length<2 || aliveCount()===0) return;   // solo: no turns to pass
+  capturePrev();
+  tokCtx=null;
+  let i=viewIdx;
+  do{ i=(i+dir+players.length)%players.length; }while(players[i].dead);
+  if(dir>0 && i<=viewIdx) round++;
+  if(dir<0 && i>=viewIdx) round=Math.max(1,round-1);
+  turnIdx=i; viewIdx=i;
+  snd('turn');
+  renderGame();
+  playAnim(dir);
+}
+
+/* ── turn transition animations ── */
+const ANIMS=[
+  ['slide','Draw Slide'],['walk','Planeswalk'],['slash','Combat Slash'],
+];
+let animKey='slash';
+let prevHTML=null, prevGrad=null; // snapshot of the outgoing card, cut apart by the slash
+function capturePrev(){
+  const pe=document.querySelector('.mainwrap .panel');
+  prevHTML = pe ? pe.outerHTML
+    .replace(/\sid="[^"]*"/g,'')      // no duplicate ids in the clones
+    .replace(/anim-\w+/g,'')          // don't replay the old entrance animation
+    : null;
+  prevGrad = frameGrad(players[viewIdx].colors); // fallback
+}
+const FX={
+  walk:()=>`<div class="iris"></div>`,
+  slash:()=>{
+    const clone = prevHTML;
+    const piece = cls => clone
+      ? `<div class="cpw ${cls}">${clone}</div>`
+      : `<div class="cp ${cls}" style="${prevGrad?`--pg:${prevGrad}`:''}"></div>`;
+    const S=[[70,-42],[-62,-50],[52,48],[-46,42],[0,-70]];
+    return piece('cpt')+piece('cpb')+piece('cpl')+piece('cpr')
+      + `<div class="sl" style="--a:-24deg;animation-delay:.04s"></div>
+         <div class="sl" style="--a:24deg;animation-delay:.32s"></div>`
+      + S.map(s=>`<div class="spark" style="--dx:${s[0]}px;--dy:${s[1]}px"></div>`).join('');
+  },
+};
+function renderAnimRow(){
+  $('animrow').innerHTML = ANIMS.map(a=>
+    `<div class="achip ${animKey===a[0]?'sel':''}" onclick="setAnim('${a[0]}')">${a[1]}</div>`).join('');
+}
+function setAnim(k){ animKey=k; renderAnimRow(); if(curScreen==='game') playAnim(); }
+function playAnim(dir){
+  const wrap=document.querySelector('.mainwrap'), pe=wrap&&wrap.querySelector('.panel');
+  if(!pe) return;
+  wrap.querySelectorAll('.fx').forEach(e=>e.remove());
+  ANIMS.forEach(a=>pe.classList.remove('anim-'+a[0]));
+  pe.classList.remove('anim-slide-rev');
+  void pe.offsetWidth;
+  pe.classList.add(animKey==='slide' && dir<0 ? 'anim-slide-rev' : 'anim-'+animKey);
+  if(FX[animKey]){
+    const d=document.createElement('div');
+    d.className='fx fx-'+animKey;
+    d.innerHTML=FX[animKey]();
+    wrap.appendChild(d);
+    setTimeout(()=>d.remove(), 950);
+  }
+}
+function openDetail(i){ if(rearrange) return; detailIdx=i; show('detail'); }
+function attachPanel(el){
+  const i=+el.dataset.i;
+  let timer=null, long=false, sx=null, sy=0, dragging=false;
+  el.addEventListener('pointerdown', e=>{ long=false; dragging=false; sx=e.clientX; sy=e.clientY;
+    if(!rearrange && !players[i].dead) timer=setTimeout(()=>{ long=true; openDetail(i); },450); });
+  el.addEventListener('pointermove', e=>{
+    if(sx===null || rearrange) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>10 || Math.abs(dy)>10) clearTimeout(timer);
+    if(Math.abs(dx)>14 && Math.abs(dx)>Math.abs(dy)){
+      dragging=true;
+      el.style.transition='none';
+      el.style.transform=`translateX(${dx*0.35}px)`;
+      el.style.opacity=String(1-Math.min(.35,Math.abs(dx)/600));
+    }
+  });
+  el.addEventListener('pointerup', e=>{
+    clearTimeout(timer);
+    const fdx=sx===null?0:e.clientX-sx, fdy=sx===null?0:e.clientY-sy; sx=null;
+    if(long) return;
+    if(dragging){
+      el.style.transition='transform .18s ease-out,opacity .18s';
+      el.style.transform=''; el.style.opacity='';
+      if(Math.abs(fdx)>70 && Math.abs(fdx)>Math.abs(fdy)*1.4) stepPlayer(fdx<0?1:-1); // left=next, right=prev
+      return;
+    }
+    if(rearrange){
+      if(swapSel===null){ swapSel=i; }
+      else if(swapSel!==i){ [players[swapSel],players[i]]=[players[i],players[swapSel]]; swapSel=null; }
+      else swapSel=null;
+      renderGame(); return;
+    }
+    if(players[i].dead) return;
+    const rect=(el.querySelector('.pleft')||el).getBoundingClientRect();
+    const leftHalf=(e.clientX-rect.left)<rect.width/2;
+    tapLife(i, leftHalf?-1:1);
+  });
+  el.addEventListener('pointerleave', ()=>{ clearTimeout(timer); sx=null;
+    if(dragging){ dragging=false; el.style.transition='transform .18s ease-out,opacity .18s'; el.style.transform=''; el.style.opacity=''; } });
+}
+/* ── sound & haptics — tiny synth, no assets ── */
+let soundOn=true, actx=null;
+function snd(kind){
+  if(soundOn){
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const t=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
+      o.connect(g); g.connect(actx.destination);
+      if(kind==='down'){ o.type='triangle'; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(110,t+.08);
+        g.gain.setValueAtTime(.11,t); g.gain.exponentialRampToValueAtTime(.001,t+.12); o.start(t); o.stop(t+.13); }
+      else if(kind==='up'){ o.type='triangle'; o.frequency.setValueAtTime(330,t); o.frequency.exponentialRampToValueAtTime(520,t+.07);
+        g.gain.setValueAtTime(.08,t); g.gain.exponentialRampToValueAtTime(.001,t+.1); o.start(t); o.stop(t+.11); }
+      else if(kind==='turn'){ o.type='sine'; o.frequency.setValueAtTime(392,t); o.frequency.exponentialRampToValueAtTime(587,t+.16);
+        g.gain.setValueAtTime(.06,t); g.gain.exponentialRampToValueAtTime(.001,t+.22); o.start(t); o.stop(t+.23); }
+      else if(kind==='death'){ o.type='sawtooth'; o.frequency.setValueAtTime(196,t); o.frequency.exponentialRampToValueAtTime(65,t+.5);
+        g.gain.setValueAtTime(.15,t); g.gain.exponentialRampToValueAtTime(.001,t+.6); o.start(t); o.stop(t+.62); }
+    }catch(e){}
+  }
+  if(navigator.vibrate) navigator.vibrate(kind==='death'?[60,40,120]: kind==='turn'?12: 8);
+}
+function toggleSound(){ soundOn=!soundOn; $('sndbtn').classList.toggle('off',!soundOn); }
+
+function tapLife(i,d){
+  const p=players[i], lb=p.bars[0];
+  snd(d<0?'down':'up');
+  lb.value+=d; p.pending+=d;
+  clearTimeout(p.ptimer);
+  p.ptimer=setTimeout(()=>{ p.pending=0; const el=$('pend-'+i); if(el) el.remove(); },1400);
+  const lifeEl=$('life-'+i), fillEl=$('fill-'+i);
+  if(lifeEl){ lifeEl.textContent=lb.value; lifeEl.classList.remove('bump'); void lifeEl.offsetWidth; lifeEl.classList.add('bump'); }
+  const w=clamp(lb.value/lb.max*100,0,100)+'%';
+  if(fillEl){ fillEl.style.width=w; }
+  const gEl=$('gfill-'+i); if(gEl) gEl.style.width=w;   // trails behind on its slower transition
+  let pendEl=$('pend-'+i);
+  if(!pendEl){ pendEl=document.createElement('div'); pendEl.id='pend-'+i;
+    document.querySelector(`.panel[data-i="${i}"]`).appendChild(pendEl); }
+  pendEl.className='pend '+(p.pending>0?'gain':'loss');
+  pendEl.textContent=(p.pending>0?'+':'')+p.pending;
+  if(lb.value<=0){ checkState(i); renderGame(); }
+}
+function tapStrip(i,bi,d){
+  if(rearrange || players[i].dead) return;
+  const b=players[i].bars[bi];
+  if(!b) return;
+  if(b.type==='token'){ b.count=clamp((b.count||0)+d,0,99); snd(d<0?'down':'up'); } // tokens: −/+ adjusts the count
+  else if(b.type==='cmd'){ b.value=clamp(b.value+d,0,b.max); snd(d<0?'down':'up'); }
+  else { b.value=clamp(b.value+d,0,999); snd(d<0?'down':'up'); }
+  if((b.type==='cmd'&&b.value<=0) || (b.type==='token'&&(b.value<=0||b.count<=0))){
+    checkState(i); renderGame(); return;
+  }
+  const v=$(`sv-${i}-${bi}`), f=$(`sf-${i}-${bi}`);
+  if(v) v.textContent = b.type==='token'?`${tokPT(b)}×${b.count}`:b.value;
+  if(f) f.style.width=clamp(b.value/b.max*100,0,100)+'%';
+}
+/* ── in-panel token editor (slides out left of the token column) ── */
+let tokCtx=null;
+function openTokEdit(i,bi){ if(rearrange||players[i].dead) return;
+  tokCtx = (tokCtx && tokCtx.i===i && tokCtx.bi===bi) ? null : {i,bi}; // tap again to close
+  renderGame(); }
+function closeTokEdit(){ tokCtx=null; renderGame(); }
+function tokBar(){ if(!tokCtx) return null; const p=players[tokCtx.i]; return p && p.bars[tokCtx.bi]; }
+function tokCtr(d){ const b=tokBar(); b.counters=(b.counters||0)+d; b.value+=d; b.max+=d;
+  if(b.value<=0||b.max<=0){ tokDied(); return; } renderGame(); }
+function tokHp(d){ const b=tokBar(); b.value=clamp(b.value+d,0,b.max);
+  if(b.value<=0){ tokDied(); return; } renderGame(); }
+function tokCnt(d){ const b=tokBar(); b.count=clamp((b.count||0)+d,0,99);
+  if(b.count<=0){ tokDied(); return; } renderGame(); }
+function tokDied(){ checkState(tokCtx.i); tokCtx=null; renderGame(); }
+function tokDelete(){ players[tokCtx.i].bars.splice(tokCtx.bi,1); tokCtx=null; renderGame(); }
+function tokRename(){ const b=tokBar(); const n=prompt('Token name:',b.name);
+  if(n&&n.trim()) b.name=n.trim().slice(0,20); renderGame(); }
+function toggleRearrange(){ rearrange=!rearrange; swapSel=null; tokCtx=null; renderGame(); }
+function addPlayerLive(){ if(players.length>=6) return;
+  players.push(makePlayer(players.length+1, nextColors()));
+  openEdit(players.length-1, 'game');   // name + colors + bars before they join the table
+}
+
+/* ───────── right-edge tool drawer ───────── */
+let drawerOpen=false;
+function setDrawer(v){
+  drawerOpen=v;
+  $('sidedrawer').classList.toggle('open',v);
+  $('drawerscrim').style.display=v?'block':'none';
+  $('drawerhandle').style.display=v?'none':'flex';
+}
+(function(){
+  let ey=null;
+  function dn(e){ ey=e.clientY; e.stopPropagation(); }
+  function up(e){ if(ey===null)return; const dy=e.clientY-ey; ey=null; e.stopPropagation();
+    if(dy<-24 || Math.abs(dy)<8) setDrawer(true); }   // drag up from the bottom edge, or just tap the tab
+  [$('edgezone'),$('drawerhandle')].forEach(el=>{
+    el.addEventListener('pointerdown',dn); el.addEventListener('pointerup',up); });
+  let dsy=null;
+  $('sidedrawer').addEventListener('pointerdown',e=>{ dsy=e.clientY; });
+  $('sidedrawer').addEventListener('pointerup',e=>{ if(dsy!==null && e.clientY-dsy>32) setDrawer(false); dsy=null; });
+})();
+
+/* ───────── dice / reset ───────── */
+function rollDice(){
+  const rolls=players.map(p=>({name:p.name, v:1+Math.floor(Math.random()*20)}));
+  const best=Math.max(...rolls.map(r=>r.v));
+  $('dicelist').innerHTML=rolls.map(r=>
+    `<div class="drow ${r.v===best?'win':''}"><b>${r.name}</b>${r.v===best?'<span style="font-style:italic;color:var(--gold)">goes first</span>':''}<div class="dv">${r.v}</div></div>`).join('');
+  openOvl('ovl-dice');
+}
+function doReset(){
+  players.forEach(p=>p.bars.forEach(b=>{
+    if(b.type==='life'||b.type==='extra'){ b.value=startLife; b.max=startLife; }
+    else if(b.type==='cmd'){ b.value=b.max; }
+    else if(b.type==='poison'||b.type==='energy'||b.type==='custom'){ b.value=0; }
+  }));
+  players.forEach(p=>p.dead=false);
+  closeOvl(); renderGame();
+}
+function newGame(){
+  players.forEach(p=>{
+    p.bars=[lifeBar()];
+    if(mode==='commander') p.bars.push({type:'cmd', ...BARDEFS.cmd});
+    p.dead=false; p.pending=0; clearTimeout(p.ptimer);
+  });
+  turnIdx=0; viewIdx=0; round=1; rearrange=false; swapSel=null; tokCtx=null;
+  closeOvl(); show('setup');
+}
+
+/* ───────── detail ───────── */
+function renderDetail(){
+  const p=players[detailIdx], cols=p.colors;
+  $('detail-appbar').innerHTML=`
+    <div class="iconbtn" onclick="show('game')"><svg class="icon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="title">${p.name}</div>
+    ${idBadgeHTML(cols,22)}
+    <div class="spacer"></div>
+    <div class="iconbtn" onclick="openEdit(${detailIdx},'detail')"><svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>`;
+  const deadBanner = p.dead ? `<div style="text-align:center;font-family:'Cinzel',serif;font-weight:900;letter-spacing:3px;
+    color:#e8927c;border:1px solid #8a3324;border-radius:12px;padding:10px;background:rgba(60,15,10,.35)">
+    YOU'VE LOST — resurrect from the battlefield</div>` : '';
+  $('detail-body').innerHTML = deadBanner + p.bars.map((b,bi)=>{
+    const pct=clamp(b.value/b.max*100,0,100);
+    const ren = b.type!=='life' ? `<div class="del" style="color:#6b5527" onclick="renameBar(${bi})"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></div>`:'';
+    const del = b.type!=='life' ? `<div class="del" onclick="delBar(${bi})"><svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div>`:'';
+    const val = b.type==='token'
+      ? `<div class="pt">${tokPT(b)}<span class="den"> ×${b.count}</span></div>`
+      : `<div class="pt">${b.value}<span class="den"> / ${b.max}</span></div>`;
+    let ctrl='';
+    if(b.type==='life'||b.type==='extra') ctrl=`<div class="b minus" onclick="chgBar(${bi},-5)">−5</div><div class="b minus" onclick="chgBar(${bi},-1)">−1</div><div class="b plus" onclick="chgBar(${bi},1)">+1</div><div class="b plus" onclick="chgBar(${bi},5)">+5</div><div class="b x" onclick="openKeypad(${bi})">±X</div>`;
+    else if(b.type==='token') ctrl=`<div class="b minus" onclick="chgBar(${bi},-1)">− hp</div><div class="b plus" onclick="chgBar(${bi},1)">+ hp</div><div class="b minus" onclick="chgTok(${bi},-1)">− tok</div><div class="b plus" onclick="chgTok(${bi},1)">+ tok</div>
+      </div><div class="ctrl"><div class="b plus" onclick="chgCtr(${bi},1)">+1/+1</div><div class="b minus" onclick="chgCtr(${bi},-1)">−1/−1</div>`;
+    else ctrl=`<div class="b minus" onclick="chgBar(${bi},-1)">−1</div><div class="b plus" onclick="chgBar(${bi},1)">+1</div><div class="b x" onclick="openKeypad(${bi})">±X</div>`;
+    return `<div class="cardbar" style="background:${frameGrad(cols)}">
+      <div class="head">
+        <div class="btitle"><div class="bname">${b.name}${b.type==='token'?' ×'+b.count:''}</div>${ren}${del}</div>${val}
+      </div>
+      <div class="track"><div class="fill" style="width:${pct}%;background:${fillGrad(cols)}"></div></div>
+      <div class="ctrl">${ctrl}</div>
+    </div>`;
+  }).join('') + `
+    <div class="addbar" onclick="openAddBar(${detailIdx},'detail')">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> SUMMON ANOTHER BAR</div>
+    <div style="text-align:center;font-style:italic;color:var(--fg-dim);font-size:12.5px">commander damage · poison · energy · tokens · extra health</div>`;
+}
+function renameBar(bi){ const b=players[detailIdx].bars[bi];
+  const n=prompt('Bar name:', b.name); if(n&&n.trim()){ b.name=n.trim().slice(0,20); renderDetail(); } }
+function renameBarE(bi){ const b=players[editIdx].bars[bi];
+  const n=prompt('Bar name:', b.name); if(n&&n.trim()){ b.name=n.trim().slice(0,20); renderEdit(); } }
+function chgBar(bi,d){ const p=players[detailIdx], b=p.bars[bi];
+  b.value=clamp(b.value+d, (b.type==='life'||b.type==='extra')?-99:0, b.type==='cmd'?b.max:999);
+  snd(d<0?'down':'up');
+  checkState(detailIdx); renderDetail(); }
+function chgTok(bi,d){ const b=players[detailIdx].bars[bi]; b.count=clamp((b.count||0)+d,0,99); checkState(detailIdx); renderDetail(); }
+function chgCtr(bi,d){ const b=players[detailIdx].bars[bi]; b.counters=(b.counters||0)+d; b.value+=d; b.max+=d; checkState(detailIdx); renderDetail(); }
+function delBar(bi){ players[detailIdx].bars.splice(bi,1); renderDetail(); }
+
+/* ───────── keypad ───────── */
+let kpSign=-1, kpDigits='';
+function openKeypad(bi){
+  kpCtx={p:detailIdx, b:bi}; kpSign=-1; kpDigits='';
+  const keys=[1,2,3,4,5,6,7,8,9];
+  $('kp-keys').innerHTML = keys.map(k=>`<div class="key" onclick="kpDigit(${k})">${k}</div>`).join('')
+    + `<div class="key op" onclick="kpToggle()">+/−</div><div class="key" onclick="kpDigit(0)">0</div>
+       <div class="key op" onclick="kpBack()"><svg class="icon" viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="m18 9-6 6M12 9l6 6"/></svg></div>`;
+  kpRender(); openOvl('ovl-keypad');
+}
+function kpVal(){ return kpSign*(parseInt(kpDigits||'0')); }
+function kpRender(){
+  const p=players[kpCtx.p], b=p.bars[kpCtx.b];
+  const isLife=(b.type==='life'||b.type==='extra');
+  const v=kpVal(), nv=clamp(b.value+v, isLife?-99:0, 999);
+  $('kp-target').innerHTML=`<div class="gdot" style="width:24px;height:24px;${dotStyle(p.colors)}"></div>
+    <b>${p.name} · ${b.name}</b> ${b.value} <span style="margin-left:auto"><b>→ ${nv}</b></span>`;
+  const amtEl=$('kp-amount');
+  amtEl.textContent=(v>0?'+':'−')+Math.abs(v);
+  amtEl.style.color = v>0 ? '#9ed3ae' : '#e8927c';
+  const n=Math.abs(v);
+  $('kp-apply').textContent = (isLife||b.type==='cmd')
+    ? (v<0?`DEAL ${n} DAMAGE`: v>0?`GAIN ${n} LIFE`:'APPLY')
+    : `APPLY ${v>0?'+':v<0?'−':''}${n}`;
+}
+function kpDigit(d){ if(kpDigits.length<3){ kpDigits+=''+d; kpRender(); } }
+function kpToggle(){ kpSign*=-1; kpRender(); }
+function kpBack(){ kpDigits=kpDigits.slice(0,-1); kpRender(); }
+function kpApply(){
+  const p=players[kpCtx.p], b=p.bars[kpCtx.b];
+  b.value=clamp(b.value+kpVal(), (b.type==='life'||b.type==='extra')?-99:0, b.type==='cmd'?b.max:999);
+  snd(kpVal()<0?'down':'up');
+  checkState(kpCtx.p);
+  closeOvl(); renderDetail();
+}
+
+/* ───────── init ───────── */
+renderSetup();
+renderAnimRow();
+applyScale();
+/* debug bootstrap: open with #demo to land on a fully-loaded game screen */
+if(location.hash.includes('demo')){
+  players[3].bars.push({type:'token',name:'Zombie',value:2,max:2,power:2,counters:0,count:5});
+  players[3].bars.push({type:'token',name:'Food',value:1,max:1,power:0,counters:0,count:3});
+  players[2].bars.push({type:'poison', ...BARDEFS.poison});
+  players[0].bars.push({type:'token',name:'Beast',value:4,max:4,power:4,counters:1,count:2});
+  players[1].pending=-3;
+  show('game');
+  if(location.hash.includes('tablet')) setDevice('tablet');
+  if(location.hash.includes('colors')){ players[0].colors=['U','B','G']; openEdit(0,'setup'); }
+  if(location.hash.includes('reset')) openOvl('ovl-reset');
+  if(location.hash.includes('drawer')) setDrawer(true);
+  if(location.hash.includes('solo')){ players.splice(1); turnIdx=0; viewIdx=0; show('game');
+    if(location.hash.includes('edit')) openTokEdit(0, players[0].bars.findIndex(b=>b.type==='token')); }
+  if(location.hash.includes('edit')){ turnIdx=3; viewIdx=3; openTokEdit(3, players[3].bars.findIndex(b=>b.type==='token')); }
+  if(location.hash.includes('slash')){ setTimeout(()=>stepPlayer(1), 80); }
+  if(location.hash.includes('testcmd')){
+    /* self-test: commander pool must never move the life total */
+    const res=[]; const p=players[0];
+    let bi=p.bars.findIndex(b=>b.type==='cmd');
+    if(bi<0){ p.bars.push({type:'cmd', ...BARDEFS.cmd}); bi=p.bars.length-1; }
+    const t=(label,fn)=>{ const life0=p.bars[0].value, cmd0=p.bars[bi].value;
+      fn();
+      const ok = p.bars[0].value===life0 && p.bars[bi].value!==cmd0;
+      res.push(`${ok?'PASS':'FAIL'} ${label}: life ${life0}→${p.bars[0].value}, cmd ${cmd0}→${p.bars[bi].value}`); };
+    turnIdx=0; viewIdx=0; renderGame();
+    t('panel −', ()=>tapStrip(0,bi,-1));
+    t('panel +', ()=>tapStrip(0,bi,+1));
+    detailIdx=0;
+    t('menu −',  ()=>chgBar(bi,-1));
+    t('menu +',  ()=>chgBar(bi,+1));
+    t('keypad −4', ()=>{ kpCtx={p:0,b:bi}; kpSign=-1; kpDigits='4'; kpApply(); });
+    t('keypad +2', ()=>{ kpCtx={p:0,b:bi}; kpSign=1;  kpDigits='2'; kpApply(); });
+    show('game'); renderGame();
+    const d=document.createElement('div');
+    d.style.cssText='position:fixed;inset:auto 8px 8px 8px;z-index:9999;background:#000;color:#0f0;font:700 13px monospace;padding:8px;white-space:pre;border:2px solid gold';
+    d.textContent=res.join('\n')+`\nfinal life=${p.bars[0].value} cmd=${p.bars[bi].value}`;
+    document.body.appendChild(d);
+  }
+}
+</script>
+</body>
+</html>

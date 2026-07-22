@@ -1,0 +1,14 @@
+# Alternative deploy target: Netlify. Serves at the site root, so the default
+# Vite base ("/") is correct — no BASE_PATH needed.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA-style fallback (harmless for a single-page PWA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

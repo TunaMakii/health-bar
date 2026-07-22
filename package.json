@@ -1,0 +1,27 @@
+{
+  "name": "health-bar",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Health Bar — an installable MTG life, counter, and token tracker PWA.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "^5.0.19",
+    "@fontsource/cinzel-decorative": "^5.0.20",
+    "@fontsource/eb-garamond": "^5.0.19"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8",
+    "vite-plugin-pwa": "^0.20.5",
+    "vitest": "^2.1.2"
+  }
+}
