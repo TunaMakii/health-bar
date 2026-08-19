@@ -163,6 +163,7 @@ function movePlayer(i: number, d: number): void {
   renderSetup()
 }
 function startGame(): void {
+  enableMotion() // this is a user gesture — a good moment to ask iOS for motion access
   M.startGame(G())
   rearrange = false
   swapSel = null
@@ -428,7 +429,6 @@ function renderGame(): void {
 
   const panelHtml = `<div class="panel comic ${tokedit ? 'editing' : ''}" data-i="${idx}">
     <div class="speed"></div>
-    <div class="round"><span>ラウンド</span><b>${g.round}</b></div>
     <div class="pad">
       <div class="pmain">
         <div class="banner">HEALTH BAR<small>ヘルスバー・決闘</small></div>
@@ -1071,6 +1071,45 @@ function buildShell(): void {
   </div>`
 }
 
+/* ───────── depth: 3D tilt of the board toward the pointer / device tilt ───────── */
+let motionEnabled = false
+function tiltBoard(rx: number, ry: number): void {
+  const mw = document.querySelector('.mainwrap') as HTMLElement | null
+  if (mw) mw.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`
+}
+function wireDepth(): void {
+  const MAX = 6
+  if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+    let raf = 0
+    window.addEventListener('pointermove', (e) => {
+      if (curScreen !== 'game' || raf) return
+      raf = requestAnimationFrame(() => {
+        raf = 0
+        const w = window.innerWidth
+        const h = window.innerHeight
+        tiltBoard(-((e.clientY - h / 2) / (h / 2)) * MAX, ((e.clientX - w / 2) / (w / 2)) * MAX)
+      })
+    })
+  }
+  window.addEventListener('deviceorientation', (e) => {
+    if (!motionEnabled || curScreen !== 'game') return
+    const c = (v: number) => Math.max(-MAX, Math.min(MAX, v))
+    tiltBoard(c(((e.beta || 0) - 42) / 5), c((e.gamma || 0) / 5))
+  })
+}
+/* iOS 13+ needs an explicit permission from a user gesture before motion events fire */
+function enableMotion(): void {
+  if (motionEnabled) return
+  const DOE = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent
+  if (DOE && typeof DOE.requestPermission === 'function') {
+    DOE.requestPermission()
+      .then((r) => { if (r === 'granted') motionEnabled = true })
+      .catch(() => {})
+  } else if (typeof window.DeviceOrientationEvent !== 'undefined') {
+    motionEnabled = true
+  }
+}
+
 function wireGlobalGestures(): void {
   // drawer opens from the LEFT edge / handle (swipe right or tap); avoids the bottom home-swipe
   let ex: number | null = null
@@ -1176,6 +1215,7 @@ export function boot(): void {
   const resumed = hydrate() // a saved game means a game was in progress
   $('sndbtn')?.classList.toggle('off', !store.settings.soundOn)
   wireGlobalGestures()
+  wireDepth()
   // resume the battlefield if we restored a save, otherwise open setup
   show(resumed ? 'game' : 'setup')
 }
