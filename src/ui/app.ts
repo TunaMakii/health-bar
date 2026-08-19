@@ -430,21 +430,23 @@ function renderGame(): void {
     <div class="speed"></div>
     <div class="round"><span>ラウンド</span><b>${g.round}</b></div>
     <div class="pad">
-      <div class="banner">HEALTH BAR<small>ヘルスバー・決闘</small></div>
-      <div class="stickers">${stickers}</div>
-      <div class="name">
-        <span class="who">${esc(p.name)} <em>//</em> <small>${cols.length === 5 ? 'RAINBOW' : cols.join('·')}</small></span>
-        <div class="menub" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.openDetail(${idx})" aria-label="Player menu — add bars & tokens">${icon(ICON.burger)}</div>
+      <div class="pmain">
+        <div class="banner">HEALTH BAR<small>ヘルスバー・決闘</small></div>
+        <div class="stickers">${stickers}</div>
+        <div class="name">
+          <span class="who">${esc(p.name)} <em>//</em> <small>${cols.length === 5 ? 'RAINBOW' : cols.join('·')}</small></span>
+          <div class="menub" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.openDetail(${idx})" aria-label="Player menu — add bars & tokens">${icon(ICON.burger)}</div>
+        </div>
+        <div class="hero">
+          <div class="kat">ライフ</div>
+          <div class="num"><span class="heronum" id="life-${idx}">${lb.value}</span><span class="of"> /${lb.max}</span></div>
+        </div>
+        <div class="hpbar"><i class="gfill" id="gfill-${idx}" style="width:${pct}%"></i><i class="fill" id="fill-${idx}" style="width:${pct}%"></i></div>
+        ${cmds}
+        ${counters}
+        <div class="footspacer"></div>
       </div>
-      <div class="hero">
-        <div class="kat">ライフ</div>
-        <div class="num"><span class="heronum" id="life-${idx}">${lb.value}</span><span class="of"> /${lb.max}</span></div>
-      </div>
-      <div class="hpbar"><i class="gfill" id="gfill-${idx}" style="width:${pct}%"></i><i class="fill" id="fill-${idx}" style="width:${pct}%"></i></div>
-      ${cmds}
-      ${counters}
-      ${tokItems ? `<div class="toks">${tokItems}</div>` : ''}
-      <div class="footspacer"></div>
+      ${tokItems ? `<div class="ptoks"><div class="tkhead">トークン · TOKENS</div>${tokItems}</div>` : ''}
       ${p.pending ? `<div class="pend ${p.pending > 0 ? 'gain' : 'loss'}" id="pend-${idx}">${p.pending > 0 ? '+' : ''}${p.pending}</div>` : ''}
     </div>
     ${tokedit ? `<div class="tokscrim" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.closeTokEdit()"></div>` : ''}

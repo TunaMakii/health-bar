@@ -772,10 +772,26 @@ body::after { opacity: 0 !important; }
 .panel.comic .pois .dots { display: flex; gap: 3px; }
 .panel.comic .pois .dots span { width: clamp(11px, 2.2vmin, 18px); height: clamp(11px, 2.2vmin, 18px); border: 2px solid var(--ink); border-radius: 50%; }
 .panel.comic .pois .dots span.on { background: #7bd84a; }
-.panel.comic .toks { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 2px 0; }
-.panel.comic .toks .tokitem { background: #17131c !important; border: 2px solid var(--cyan) !important; border-radius: 6px; padding: 5px 9px; box-shadow: 3px 3px 0 rgba(13,11,11,.85); }
-.panel.comic .toks .tkname { color: #fff !important; } .panel.comic .toks .tkpt { color: var(--cyan) !important; }
-.panel.comic .toks .tkcnt { color: #cabfb2 !important; } .panel.comic .toks .tkctr { color: var(--yel) !important; }
+.panel.comic .pmain { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.panel.comic .ptoks { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 2px 0; }
+.panel.comic .ptoks .tkhead { display: none; } /* header only shows in the landscape column */
+.panel.comic .ptoks .tokitem { background: #17131c !important; border: 2px solid var(--cyan) !important; border-radius: 6px; padding: 5px 9px; box-shadow: 3px 3px 0 rgba(13,11,11,.85); }
+.panel.comic .ptoks .tkname { color: #fff !important; } .panel.comic .ptoks .tkpt { color: var(--cyan) !important; }
+.panel.comic .ptoks .tkcnt { color: #cabfb2 !important; } .panel.comic .ptoks .tkctr { color: var(--yel) !important; }
+
+/* ── landscape: numbers + bars on the LEFT, tokens docked in a column on the RIGHT (like the original) ── */
+@media (orientation: landscape) {
+  .panel.comic .pad { flex-direction: row; gap: 14px; }
+  .panel.comic .pmain { flex: 1; min-width: 0; justify-content: center; }
+  .panel.comic .num { font-size: clamp(56px, 17vmin, 150px); }
+  .panel.comic .speed { left: 33%; }
+  .panel.comic .ptoks { margin: 0; width: 34%; flex: none; flex-direction: column; flex-wrap: nowrap; align-self: stretch; overflow-y: auto;
+    background: #17131c; border: 3px solid var(--ink); border-radius: 10px; box-shadow: 5px 5px 0 rgba(13,11,11,.85); padding: 8px; gap: 8px; }
+  .panel.comic .ptoks .tkhead { display: block; font-family: 'Dela Gothic One', sans-serif; font-size: clamp(11px, 2vmin, 15px); color: var(--cyan); text-align: center; letter-spacing: 2px; flex: none; margin-bottom: 2px; }
+  .panel.comic .ptoks .tokitem { background: rgba(255,255,255,.06) !important; box-shadow: none; }
+  /* token editor slides out over the pools, left of the token column */
+  .panel.comic .tokedit { left: 14px !important; right: calc(34% + 22px) !important; top: 14px !important; bottom: 14px !important; max-height: none !important; }
+}
 .panel.comic .footspacer { flex: 1; min-height: 6px; }
 .panel.comic .pend { top: auto !important; bottom: 14px !important; right: 14px !important; left: auto !important;
   font-family: 'Anton', sans-serif !important; background: #fff !important; border: 2px solid var(--ink) !important; color: var(--ink) !important; box-shadow: 2px 2px 0 var(--ink) !important; backdrop-filter: none !important; }
