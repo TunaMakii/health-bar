@@ -14,7 +14,7 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'icons/*.png'],
       manifest: {
         name: 'Health Bar',
@@ -47,6 +47,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff,woff2,png,svg,ico}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
+        skipWaiting: true, // new SW activates immediately instead of waiting for a manual refresh
       },
     }),
   ],
