@@ -106,14 +106,24 @@ describe('app boots and renders every screen without crashing', () => {
     expect(store.game.players[0].bars[0].value).toBe(37) // damage survived the refresh
   })
 
-  it('solo mode uses a full-bleed board with no rail', async () => {
+  it('solo mode renders the comic hero board with a single sticker', async () => {
     const HB = await freshBoot()
     HB.chgCount(-1)
     HB.chgCount(-1)
     HB.chgCount(-1) // 4 → 1
     expect(store.game.players.length).toBe(1)
     HB.startGame()
-    expect(q('.game.bleedmode')).toBeTruthy()
-    expect(q('.siderail')).toBeFalsy() // no rail in solo
+    expect(q('.panel.comic')).toBeTruthy()
+    expect(q('.siderail')).toBeFalsy() // the gold rail is gone in the comic theme
+    expect(document.querySelectorAll('.stickers .stk').length).toBe(1)
+  })
+
+  it('damage FX: tapping life spawns a burst + floating delta', async () => {
+    const HB = await freshBoot()
+    HB.startGame()
+    HB.tapLife(0, -7)
+    expect(q('.panel .fxburst')).toBeTruthy()
+    expect(q('.panel .fxdelta')).toBeTruthy()
+    expect(document.querySelector('.fxsfx')).toBeTruthy() // ≥5 damage → SFX word
   })
 })

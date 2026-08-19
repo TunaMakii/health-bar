@@ -12,7 +12,6 @@ import type { Bar, GameState, ManaKey, Player } from '../state/types'
 import { TOKENS } from '../state/tokens'
 import { MANA, COLOR_ORDER, injectManaDefs } from './manaSymbols'
 import { colorsName, canonicalColors, dotStyle, frameGrad, fillGrad, idBadgeHTML } from './colors'
-import { STRIPMETA } from './barMeta'
 import { ICON, icon } from './icons'
 import { $, esc } from './dom'
 import { snd } from './sound'
@@ -45,9 +44,6 @@ function commit(): void {
 /* responsive: fluid sizing is always on (device-fit); large slates get device-tablet */
 function isTablet(): boolean {
   return Math.min(window.innerWidth, window.innerHeight) >= 600
-}
-function isWide(): boolean {
-  return isTablet() || window.innerWidth > window.innerHeight
 }
 function updateDeviceClasses(): void {
   document.body.classList.add('device-fit')
@@ -331,43 +327,35 @@ function renderGame(): void {
   const g = G()
   const players = g.players
   const grid = $('grid')!
-  const solo1 = players.length === 1
-  grid.classList.toggle('bleedmode', !isWide() || solo1)
+  grid.className = 'game'
+  grid.style.cssText = 'display:flex'
   $('btn-arr')?.classList.toggle('on', rearrange)
 
   const hint = $('hint')!
   if (rearrange) {
-    hint.textContent = 'SWAP SEATS — tap two names to trade turn order'
+    hint.innerHTML = 'SWAP SEATS — tap two <b>stickers</b> to trade turn order'
     hint.classList.add('warn')
-  } else if (solo1) {
-    hint.textContent = 'tap sides: −1/+1 · hold: menu · bottom tab: tools'
-    hint.classList.remove('warn')
   } else {
-    hint.textContent = 'swipe left: next · swipe right: previous · tap sides: −1/+1 · hold: menu · bottom tab: tools'
+    hint.innerHTML = '◀ SWIPE · TAP SIDES <b>±1</b> · <b>☰</b> FOR BARS &amp; TOKENS ▶'
     hint.classList.remove('warn')
   }
 
   if (g.viewIdx >= players.length) g.viewIdx = players.length - 1
   if (g.turnIdx >= players.length) g.turnIdx = players.length - 1
 
-  const chips = solo1
-    ? ''
-    : `<div class="siderail"><div class="roundtag">R${g.round}</div>` +
-      players
-        .map((p, i) => {
-          const cls = ['pchip', i === g.turnIdx ? 'turn' : '', i === g.viewIdx ? 'view' : '', p.dead ? 'deadc' : '', rearrange && swapSel === i ? 'swapsel' : '']
-            .filter(Boolean)
-            .join(' ')
-          return `<div class="${cls}" style="--pcgrad:${fillGrad(p.colors)}" onclick="HB.chipTap(${i})">
-            <div class="top">
-              <div class="gdot" style="width:11px;height:11px;${dotStyle(p.colors)}"></div>
-              <span class="nm">${esc(p.name)}</span>
-            </div>
-            ${p.dead ? `<svg class="chipskull" viewBox="0 0 24 24"><use href="#sy-b"/></svg>` : `<span class="lv">${p.bars[0].value}</span>`}
-          </div>`
-        })
-        .join('') +
-      `</div>`
+  const rot = ['', 'r2', 'r3', 'r4', 'r5', 'r6']
+  const stickers = players
+    .map((pp, i) => {
+      const cls = ['stk', rot[i % 6], i === g.turnIdx ? 'cur' : '', i === g.viewIdx ? 'view' : '', pp.dead ? 'dead' : '', rearrange && swapSel === i ? 'swapsel' : '']
+        .filter(Boolean)
+        .join(' ')
+      return `<div class="${cls}" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.chipTap(${i})">
+        <span class="d" style="${dotStyle(pp.colors)}"></span>
+        <span class="n">${esc(pp.name)}</span>
+        ${pp.dead ? `<span class="l">☠</span>` : `<span class="l">${pp.bars[0].value}</span>`}
+      </div>`
+    })
+    .join('')
 
   const idx = g.viewIdx
   const p = players[idx]
@@ -375,45 +363,40 @@ function renderGame(): void {
   const lb = p.bars[0]
   const pct = clamp((lb.value / lb.max) * 100, 0, 100)
 
-  let strips = ''
+  let cmds = ''
+  let counters = ''
   let tokItems = ''
-  let cmdpools = ''
   p.bars.forEach((b, bi) => {
     if (bi === 0) return
     if (b.type === 'cmd') {
-      const pctC = clamp((b.value / b.max) * 100, 0, 100)
-      cmdpools += `<div class="pooldiv"></div>
-        <div class="pool cmd">
-          <div class="poolname">${esc(b.name)}</div>
-          <div class="poolrow">
-            <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.tapStrip(${idx},${bi},-1)">−</div>
-            <div class="cmdval" id="sv-${idx}-${bi}">${b.value}</div>
-            <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.tapStrip(${idx},${bi},1)">+</div>
-          </div>
-          <div class="bar cmdbar"><div class="fill" id="sf-${idx}-${bi}" style="width:${pctC}%;background:${STRIPMETA.cmd!.grad}"></div></div>
-        </div>`
+      const w = clamp((b.value / b.max) * 100, 0, 100)
+      cmds += `<div class="cmd" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.stripHalf(event,this,${idx},${bi})">
+        <span class="k">統率者<br>${esc(b.name)}</span>
+        <div class="cbar"><i id="sf-${idx}-${bi}" style="width:${w}%"></i></div>
+        <span class="v"><span class="heronum2" id="sv-${idx}-${bi}">${b.value}</span><span class="vof"> /${b.max}</span></span>
+      </div>`
       return
     }
     if (b.type === 'token') {
       const ctr = b.counters || 0
       tokItems += `<div class="tokitem" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.openTokEdit(${idx},${bi})">
         <div class="tkname">${esc(b.name)}</div>
-        <div class="tkstats"><span class="tkpt">${M.tokPT(b)}</span><span class="tkcnt">×${b.count}</span>
-          <div class="tkbar"><div class="tkfill" style="width:${clamp((b.value / b.max) * 100, 0, 100)}%"></div></div>
-          ${ctr ? `<span class="tkctr">${ctr > 0 ? '+' + ctr : ctr}</span>` : ''}
-        </div>
+        <div class="tkstats"><span class="tkpt">${M.tokPT(b)}</span><span class="tkcnt">×${b.count}</span>${ctr ? `<span class="tkctr">${ctr > 0 ? '+' + ctr : ctr}</span>` : ''}</div>
       </div>`
       return
     }
-    const m = STRIPMETA[b.type] || STRIPMETA.extra!
-    const grad = m.grad || fillGrad(cols)
-    const pctS = clamp((b.value / b.max) * 100, 0, 100)
-    strips += `<div class="cmdstrip" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()">
-      <div class="cbtn" onpointerup="event.stopPropagation();HB.tapStrip(${idx},${bi},-1)">−</div>
-      <svg class="cicon" viewBox="0 0 24 24">${m.icon}</svg>
-      <span class="cval" id="sv-${idx}-${bi}">${b.value}</span>
-      <div class="cbar"><div class="cfill" id="sf-${idx}-${bi}" style="width:${pctS}%;background:${grad}"></div></div>
-      <div class="cbtn" onpointerup="event.stopPropagation();HB.tapStrip(${idx},${bi},1)">+</div>
+    if (b.type === 'poison') {
+      let dots = ''
+      for (let k = 0; k < b.max; k++) dots += `<span class="${k < b.value ? 'on' : ''}"></span>`
+      counters += `<div class="pois" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.poisonTap(event,this,${idx},${bi})">毒 ${esc(b.name)}<span class="dots">${dots}</span></div>`
+      return
+    }
+    const w = clamp((b.value / b.max) * 100, 0, 100)
+    const lab = b.type === 'energy' ? '電力' : b.type === 'extra' ? '予備' : 'カウンター'
+    counters += `<div class="cmd" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.stripHalf(event,this,${idx},${bi})">
+      <span class="k">${lab}<br>${esc(b.name)}</span>
+      <div class="cbar"><i id="sf-${idx}-${bi}" style="width:${w}%"></i></div>
+      <span class="v"><span class="heronum2" id="sv-${idx}-${bi}">${b.value}</span><span class="vof"> /${b.max}</span></span>
     </div>`
   })
 
@@ -443,48 +426,42 @@ function renderGame(): void {
     }
   }
 
-  const nOther = 1 + p.bars.filter((b) => b.type !== 'life' && b.type !== 'token').length
-  const dense = !isWide() && (nOther > 3 || (players.length > 4 && nOther > 2))
-  const panelHtml = `<div class="panel solo ${tokItems ? 'hastok' : ''} ${tokedit ? 'editing' : ''} ${dense ? 'dense' : ''}"
-      style="background:${frameGrad(cols)}" data-i="${idx}">
-    <i class="pcor tl"></i><i class="pcor tr"></i><i class="pcor bl"></i><i class="pcor br"></i>
-    ${p.pending ? `<div class="pend ${p.pending > 0 ? 'gain' : 'loss'}" id="pend-${idx}">${p.pending > 0 ? '+' : ''}${p.pending}</div>` : ''}
-    <div class="titlebar">
-      <div class="tname">${esc(p.name)}</div>
-      ${idBadgeHTML(cols)}
-      <div class="menubtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.openDetail(${idx})" aria-label="Player menu">${icon(ICON.burger, 'icon icon-sm')}</div>
-    </div>
-    <div class="panelbody">
-      <div class="pleft">
-        <div class="lifewrap">
-          <div class="pool">
-            <div class="poolname">${esc(lb.name)}</div>
-            <div class="poolrow">
-              <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.tapLife(${idx},-1)">−</div>
-              <div class="life" id="life-${idx}">${lb.value}</div>
-              <div class="pbtn" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.tapLife(${idx},1)">+</div>
-            </div>
-            <div class="bar"><div class="gfill" id="gfill-${idx}" style="width:${pct}%"></div><div class="fill" id="fill-${idx}" style="width:${pct}%;background:${fillGrad(cols)}"></div></div>
-          </div>
-          ${cmdpools}
-        </div>
-        ${strips ? `<div class="strips">${strips}</div>` : ''}
+  const panelHtml = `<div class="panel comic ${tokedit ? 'editing' : ''}" data-i="${idx}">
+    <div class="speed"></div>
+    <div class="round"><span>ラウンド</span><b>${g.round}</b></div>
+    <div class="pad">
+      <div class="banner">HEALTH BAR<small>ヘルスバー・決闘</small></div>
+      <div class="stickers">${stickers}</div>
+      <div class="name">
+        <span class="who">${esc(p.name)} <em>//</em> <small>${cols.length === 5 ? 'RAINBOW' : cols.join('·')}</small></span>
+        <div class="menub" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.openDetail(${idx})" aria-label="Player menu — add bars & tokens">${icon(ICON.burger)}</div>
       </div>
-      ${tokItems ? `<div class="pright" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation()"><div class="tkhead">TOKENS</div>${tokItems}</div>` : ''}
-      ${tokedit}
+      <div class="hero">
+        <div class="kat">ライフ</div>
+        <div class="num"><span class="heronum" id="life-${idx}">${lb.value}</span><span class="of"> /${lb.max}</span></div>
+      </div>
+      <div class="hpbar"><i class="gfill" id="gfill-${idx}" style="width:${pct}%"></i><i class="fill" id="fill-${idx}" style="width:${pct}%"></i></div>
+      ${cmds}
+      ${counters}
+      ${tokItems ? `<div class="toks">${tokItems}</div>` : ''}
+      <div class="footspacer"></div>
+      ${p.pending ? `<div class="pend ${p.pending > 0 ? 'gain' : 'loss'}" id="pend-${idx}">${p.pending > 0 ? '+' : ''}${p.pending}</div>` : ''}
     </div>
+    ${tokedit ? `<div class="tokscrim" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.closeTokEdit()"></div>` : ''}
+    ${tokedit}
     ${
       p.dead
         ? `<div class="deadovl">
+        <div class="kodeco">やられた</div>
         <svg class="skull" viewBox="0 0 24 24"><use href="#sy-b"/></svg>
-        <div class="deadtxt">YOU'VE LOST</div>
+        <div class="deadtxt">K.O.!!</div>
         <div class="revive" onpointerdown="event.stopPropagation()" onpointerup="event.stopPropagation();HB.revive(${idx})">RESURRECT</div>
       </div>`
         : ''
     }
   </div>`
 
-  grid.innerHTML = chips + `<div class="mainwrap">${panelHtml}</div>`
+  grid.innerHTML = `<div class="mainwrap">${panelHtml}</div>`
   const pe = grid.querySelector('.panel') as HTMLElement | null
   if (pe) attachPanel(pe)
 }
@@ -631,6 +608,7 @@ function tapLife(i: number, d: number): void {
   }
   pendEl.className = 'pend ' + (p.pending > 0 ? 'gain' : 'loss')
   pendEl.textContent = (p.pending > 0 ? '+' : '') + p.pending
+  fxAt(i, lifeEl, d, false)
   commit()
   if (lb.value <= 0) {
     if (M.checkState(g, i)) snd('death')
@@ -654,6 +632,63 @@ function tapStrip(i: number, bi: number, d: number): void {
   const f = $(`sf-${i}-${bi}`) as HTMLElement | null
   if (v) v.textContent = b.type === 'token' ? `${M.tokPT(b)}×${b.count}` : String(b.value)
   if (f) f.style.width = clamp((b.value / b.max) * 100, 0, 100) + '%'
+  if (v && b.type !== 'token') fxAt(i, v, d, true)
+}
+
+/* ── loud comic damage FX — shake · explosion burst · number slam · floating ±N · SFX ── */
+const SFX = ['ドカン!', 'バキ!', 'ズバー!', 'ドン!', 'ガーン!', 'ドカーン!', 'バン!']
+function fxAt(i: number, numEl: HTMLElement | null, d: number, small: boolean): void {
+  const panel = document.querySelector(`.panel[data-i="${i}"]`) as HTMLElement | null
+  if (!panel || !numEl || !d) return
+  const loss = d < 0
+  const mag = Math.abs(d)
+  if (loss) {
+    panel.style.setProperty('--shk', Math.min((small ? 1.5 : 3) + mag, small ? 6 : 15) + 'px')
+    panel.classList.remove('fx-shake')
+    void panel.offsetWidth
+    panel.classList.add('fx-shake')
+  }
+  numEl.classList.remove('fx-slam', 'fx-pop')
+  void numEl.offsetWidth
+  numEl.classList.add(loss ? 'fx-slam' : 'fx-pop')
+  const anchor = (numEl.closest('.pool') || numEl.parentElement || panel) as HTMLElement
+  const burst = document.createElement('div')
+  burst.className = 'fxburst ' + (loss ? 'loss' : 'gain')
+  burst.style.setProperty('--sz', (small ? 66 : 120) + mag * (small ? 8 : 14) + 'px')
+  anchor.appendChild(burst)
+  setTimeout(() => burst.remove(), 640)
+  const delta = document.createElement('div')
+  delta.className = 'fxdelta ' + (loss ? 'loss' : 'gain') + (small ? ' sm' : '')
+  delta.textContent = (loss ? '−' : '+') + mag + (loss ? (mag >= 5 ? '!!' : '!') : '')
+  delta.style.setProperty('--dx', ((Math.random() * 130 - 65) | 0) + 'px')
+  delta.style.setProperty('--rot', ((Math.random() * 16 - 8) | 0) + 'deg')
+  anchor.appendChild(delta)
+  setTimeout(() => delta.remove(), 920)
+  if (loss && mag >= 5 && !small) {
+    const sfx = document.createElement('div')
+    sfx.className = 'fxsfx'
+    sfx.textContent = SFX[(Math.random() * SFX.length) | 0]
+    sfx.style.setProperty('--rot', ((Math.random() * 20 - 10) | 0) + 'deg')
+    panel.appendChild(sfx)
+    setTimeout(() => sfx.remove(), 760)
+  }
+}
+/* comic strips carry no visible buttons — tap left/right half to adjust */
+function stripHalf(ev: PointerEvent, el: HTMLElement, i: number, bi: number): void {
+  const r = el.getBoundingClientRect()
+  tapStrip(i, bi, ev.clientX - r.left < r.width / 2 ? -1 : 1)
+}
+function poisonTap(ev: PointerEvent, el: HTMLElement, i: number, bi: number): void {
+  const g = G()
+  if (rearrange || g.players[i].dead) return
+  const b = g.players[i].bars[bi]
+  const r = el.getBoundingClientRect()
+  const d = ev.clientX - r.left < r.width / 2 ? -1 : 1
+  b.value = clamp(b.value + d, 0, b.max)
+  snd(d < 0 ? 'down' : 'up')
+  if (M.checkState(g, i)) snd('death')
+  commit()
+  renderGame()
 }
 
 /* in-panel token editor */
@@ -1035,15 +1070,15 @@ function buildShell(): void {
 }
 
 function wireGlobalGestures(): void {
-  // drawer open from the bottom edge / handle; close on swipe-down or scrim tap
-  let ey: number | null = null
-  const dn = (e: PointerEvent) => { ey = e.clientY; e.stopPropagation() }
+  // drawer opens from the LEFT edge / handle (swipe right or tap); avoids the bottom home-swipe
+  let ex: number | null = null
+  const dn = (e: PointerEvent) => { ex = e.clientX; e.stopPropagation() }
   const up = (e: PointerEvent) => {
-    if (ey === null) return
-    const dy = e.clientY - ey
-    ey = null
+    if (ex === null) return
+    const dx = e.clientX - ex
+    ex = null
     e.stopPropagation()
-    if (dy < -24 || Math.abs(dy) < 8) setDrawer(true) // drag up from the edge, or tap the tab
+    if (dx > 24 || Math.abs(dx) < 8) setDrawer(true) // swipe right from the left edge, or tap the tab
   }
   ;[$('edgezone'), $('drawerhandle')].forEach((el) => {
     el?.addEventListener('pointerdown', dn)
@@ -1051,9 +1086,9 @@ function wireGlobalGestures(): void {
   })
   $('drawerscrim')?.addEventListener('click', () => setDrawer(false))
   const dr = $('sidedrawer')!
-  let dsy: number | null = null
-  dr.addEventListener('pointerdown', (e) => { dsy = e.clientY })
-  dr.addEventListener('pointerup', (e) => { if (dsy !== null && e.clientY - dsy > 32) setDrawer(false); dsy = null })
+  let dsx: number | null = null
+  dr.addEventListener('pointerdown', (e) => { dsx = e.clientX })
+  dr.addEventListener('pointerup', (e) => { if (dsx !== null && e.clientX - dsx < -32) setDrawer(false); dsx = null })
   // any tool except sound auto-closes the drawer
   dr.addEventListener('click', (e) => {
     const t = e.target as HTMLElement
@@ -1093,6 +1128,8 @@ const HB = {
   openDetail,
   tapLife,
   tapStrip,
+  stripHalf,
+  poisonTap,
   openTokEdit,
   closeTokEdit,
   tokCtr,

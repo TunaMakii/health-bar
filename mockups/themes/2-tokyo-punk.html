@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>Health Bar — Tokyo Punk theme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Anton&family=Dela+Gothic+One&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* TOKYO PUNK — manga screentone, ink outlines, speed lines, neon pop */
+:root{--ink:#0d0b0b;--pink:#ff2d95;--cyan:#12e6ff;--yel:#ffe600;--paper:#f4efe6;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:390px;height:844px;background:var(--paper);color:var(--ink);overflow:hidden;position:relative;
+  font-family:'Rajdhani',sans-serif;
+  background-image:radial-gradient(circle,rgba(13,11,11,.14) 1.1px,transparent 1.3px);background-size:7px 7px}
+.frame{position:absolute;inset:10px;border:4px solid var(--ink);border-radius:6px;background:var(--paper);
+  box-shadow:8px 8px 0 rgba(13,11,11,.9);overflow:hidden;
+  background-image:radial-gradient(circle,rgba(13,11,11,.10) 1px,transparent 1.2px);background-size:6px 6px}
+/* speed lines behind the hero number */
+.speed{position:absolute;left:50%;top:340px;width:900px;height:900px;transform:translate(-50%,-50%);pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 50%, rgba(13,11,11,.16) 0deg 1.4deg, transparent 1.4deg 6deg);
+  -webkit-mask:radial-gradient(circle,transparent 96px,#000 150px,transparent 300px);
+  mask:radial-gradient(circle,transparent 96px,#000 150px,transparent 300px)}
+.pad{position:relative;padding:16px 16px;height:100%;display:flex;flex-direction:column;z-index:2}
+.banner{font-family:'Dela Gothic One',sans-serif;transform:rotate(-3deg);align-self:flex-start;
+  background:var(--ink);color:var(--yel);padding:5px 14px;border-radius:4px;font-size:20px;letter-spacing:1px;
+  box-shadow:4px 4px 0 var(--pink);text-transform:uppercase}
+.banner small{font-family:'Rajdhani';font-size:12px;color:var(--cyan);letter-spacing:3px;display:block;margin-top:-2px}
+.round{position:absolute;right:14px;top:12px;width:58px;height:58px;transform:rotate(8deg);
+  background:var(--pink);color:#fff;font-family:'Anton';font-size:15px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;line-height:.9;border:3px solid var(--ink);
+  clip-path:polygon(50% 0,63% 20%,86% 12%,80% 36%,100% 50%,80% 64%,86% 88%,63% 80%,50% 100%,37% 80%,14% 88%,20% 64%,0 50%,20% 36%,14% 12%,37% 20%);
+  box-shadow:3px 3px 0 var(--ink)}
+.round b{font-size:22px}
+.stickers{display:flex;gap:7px;margin:16px 0 4px;flex-wrap:wrap}
+.stk{border:3px solid var(--ink);background:#fff;padding:3px 9px 3px 6px;border-radius:20px;display:flex;align-items:center;gap:6px;
+  font-weight:700;font-size:13px;box-shadow:3px 3px 0 rgba(13,11,11,.85)}
+.stk .d{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+.stk .n{font-family:'Dela Gothic One';font-size:11px}
+.stk .l{font-family:'Anton';font-size:16px;margin-left:2px}
+.stk.cur{background:var(--yel);transform:rotate(-2deg)}
+.stk.r2{transform:rotate(2deg)} .stk.r3{transform:rotate(-1deg)} .stk.r4{transform:rotate(3deg)}
+.name{font-family:'Dela Gothic One';font-size:26px;margin-top:14px;transform:rotate(-1deg);letter-spacing:0}
+.name em{font-style:normal;color:var(--pink)}
+.name small{font-family:'Rajdhani';font-weight:700;font-size:13px;color:#6b6258;letter-spacing:2px}
+.hero{position:relative;text-align:center;margin-top:2px}
+.kat{font-family:'Dela Gothic One';font-size:15px;color:var(--ink);letter-spacing:4px}
+.num{font-family:'Anton';font-size:150px;line-height:.86;color:var(--yel);
+  -webkit-text-stroke:5px var(--ink);paint-order:stroke fill;
+  text-shadow:7px 7px 0 var(--pink);letter-spacing:2px}
+.of{font-family:'Anton';font-size:26px;color:var(--ink);-webkit-text-stroke:0;letter-spacing:1px}
+.dmg{position:absolute;right:6px;top:20px;transform:rotate(11deg);font-family:'Bangers';font-size:34px;color:var(--cyan);
+  -webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
+.hpbar{height:20px;border:3px solid var(--ink);background:#fff;border-radius:20px;overflow:hidden;margin:6px 24px 0;box-shadow:3px 3px 0 rgba(13,11,11,.85)}
+.hpbar i{display:block;height:100%;width:85%;background:
+  repeating-linear-gradient(-45deg,var(--pink) 0 8px,#ff5aa9 8px 16px)}
+.cmd{display:flex;align-items:center;gap:10px;margin:16px 4px 0;border:3px solid var(--ink);border-radius:8px;padding:6px 10px;background:#fff;box-shadow:4px 4px 0 rgba(13,11,11,.85)}
+.cmd .k{font-family:'Dela Gothic One';font-size:11px;color:var(--ink)}
+.cmd .v{font-family:'Anton';font-size:34px;color:var(--cyan);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill;margin-left:auto}
+.cmd .vof{font-family:'Rajdhani';font-weight:700;font-size:13px;color:#6b6258}
+.cmd .cbar{flex:1;height:12px;border:2px solid var(--ink);border-radius:20px;overflow:hidden;background:#fff}
+.cmd .cbar i{display:block;height:100%;width:86%;background:var(--yel)}
+.pois{display:flex;align-items:center;gap:8px;margin:12px 4px 0;font-family:'Dela Gothic One';font-size:11px}
+.pois .dots{display:flex;gap:3px}.pois .dots span{width:11px;height:11px;border:2px solid var(--ink);border-radius:50%}
+.pois .dots span.on{background:#7bd84a}
+.foot{margin-top:auto;font-family:'Bangers';font-size:16px;letter-spacing:1px;color:var(--ink);transform:rotate(-1deg)}
+.foot b{color:var(--pink)}
+</style></head>
+<body>
+  <div class="frame">
+    <div class="speed"></div>
+    <div class="round"><span>ラウンド</span><b>3</b></div>
+    <div class="pad">
+      <div class="banner">HEALTH BAR<small>ヘルスバー・決闘</small></div>
+      <div class="stickers">
+        <div class="stk cur"><span class="d" style="background:#7db4ff"></span><span class="n">メイ</span><span class="l">34</span></div>
+        <div class="stk r2"><span class="d" style="background:#ff6b6b"></span><span class="n">ラヴィ</span><span class="l">40</span></div>
+        <div class="stk r3"><span class="d" style="background:#5ad6a0"></span><span class="n">ジェイ</span><span class="l">28</span></div>
+        <div class="stk r4"><span class="d" style="background:#ffb642"></span><span class="n">ソル</span><span class="l">12</span></div>
+      </div>
+      <div class="name">MEI <em>//</em> <small>青黒 U·B</small></div>
+      <div class="hero">
+        <div class="kat">ライフ</div>
+        <div class="num">34<span class="of"> /40</span></div>
+        <div class="dmg">−7!!</div>
+      </div>
+      <div class="hpbar"><i></i></div>
+      <div class="cmd">
+        <span class="k">統率者<br>CMDR</span>
+        <div class="cbar"><i></i></div>
+        <span class="v">18<span class="vof"> /21</span></span>
+      </div>
+      <div class="pois">
+        毒 POISON
+        <span class="dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+      </div>
+      <div class="foot">◀ SWIPE <b>NEXT</b> · TAP <b>±1</b> · HOLD <b>MENU</b> ▶</div>
+    </div>
+  </div>
+</body></html>

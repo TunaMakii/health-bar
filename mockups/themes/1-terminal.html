@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>Health Bar — Terminal theme</title>
+<style>
+/* TERM — minimal monochrome phosphor terminal. One accent (green) + neutrals. */
+:root{
+  --bg:#090c0a; --line:#1b241e; --dim:#556359; --fg:#aebcb1; --brt:#eafff1; --acc:#43f57a;
+  --mono:'Ubuntu Mono','Consolas',Monaco,'Andale Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:390px;height:844px;background:var(--bg);color:var(--fg);font-family:var(--mono);
+  font-size:13px;line-height:1.5;overflow:hidden;position:relative;padding:14px 14px}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.45}
+.dim{color:var(--dim)} .acc{color:var(--acc)} .brt{color:var(--brt)}
+.hr{border:0;border-top:1px solid var(--line);margin:11px 0}
+.top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--dim)}
+.top .path b{color:var(--acc);font-weight:400}
+.table{font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center;padding:2px 0;position:relative}
+.row .id{color:var(--dim);width:20px}
+.row .nm{width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .cl{color:var(--dim);width:40px;font-size:11px}
+.row .lv{margin-left:auto;font-weight:700}
+.row.cur{color:var(--brt)} .row.cur .nm{color:var(--brt)} .row.cur .lv{color:var(--acc)}
+.row.cur::before{content:'›';color:var(--acc);position:absolute;left:-11px}
+.prompt{font-size:13px;margin-bottom:2px}
+.prompt .u{color:var(--brt)} .prompt .c{color:var(--acc)}
+.blk{margin:9px 0}
+.lbl{font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+.big{font-size:46px;line-height:1;font-weight:700;color:var(--brt);letter-spacing:-1px}
+.big .of{font-size:15px;color:var(--dim);font-weight:400}
+.meter{font-size:14px;letter-spacing:-1px;margin-top:2px}
+.meter .on{color:var(--acc)} .meter .off{color:var(--line)}
+.meter.cmd .on{color:#2f9a58}
+.strip{display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:7px}
+.strip .k{color:var(--dim);width:70px}
+.strip .m .on{color:var(--acc)} .strip .m .off{color:var(--line)}
+.blink{animation:bl 1.1s step-end infinite}@keyframes bl{50%{opacity:0}}
+.foot{position:absolute;left:14px;right:14px;bottom:16px;font-size:11px;color:var(--dim)}
+</style></head>
+<body>
+  <div class="top">
+    <div class="path">health-bar <span class="dim">~/</span><b>duel</b></div>
+    <div>round <span class="acc">03</span> · 4 alive</div>
+  </div>
+  <hr class="hr">
+  <div class="table">
+    <div class="row cur"><span class="id">01</span><span class="nm">mei</span><span class="cl">U/B</span><span class="lv">34</span></div>
+    <div class="row"><span class="id">02</span><span class="nm">ravi</span><span class="cl">R/W</span><span class="lv">40</span></div>
+    <div class="row"><span class="id">03</span><span class="nm">jae</span><span class="cl">G</span><span class="lv">28</span></div>
+    <div class="row"><span class="id">04</span><span class="nm">sol</span><span class="cl">R/G</span><span class="lv">12</span></div>
+  </div>
+  <hr class="hr">
+  <div class="prompt"><span class="c">$</span> <span class="u">mei</span> <span class="dim">--colors</span> UB</div>
+
+  <div class="blk">
+    <div class="lbl">health</div>
+    <div class="big">34<span class="of"> / 40</span></div>
+    <div class="meter"><span class="on">██████████████████</span><span class="off">██████</span></div>
+  </div>
+  <div class="blk">
+    <div class="lbl">commander</div>
+    <div class="big">18<span class="of"> / 21</span></div>
+    <div class="meter cmd"><span class="on">████████████████</span><span class="off">████</span></div>
+  </div>
+
+  <div class="strip"><span class="k">poison</span><span class="m"><span class="on">███</span><span class="off">░░░░░░░</span></span><span class="dim">03/10</span></div>
+  <div class="strip"><span class="k">energy</span><span class="m"><span class="on">██████</span><span class="off">░░░░░░░░░░░░░░</span></span><span class="dim">06/20</span></div>
+
+  <hr class="hr">
+  <div class="foot">tap ±1 · swipe: turn · hold: menu <span class="acc blink">█</span></div>
+</body></html>
