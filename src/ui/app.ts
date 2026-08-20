@@ -66,7 +66,16 @@ function show(name: Screen): void {
   if (name === 'setup') renderSetup()
   if (name === 'edit') renderEdit()
   if (name === 'game') renderGame()
-  if (name === 'detail') renderDetail()
+  if (name === 'detail') { renderDetail(); dealDetail() }
+}
+/* play the card-deal entrance once, on opening the STATUS menu (not on inner re-renders) */
+function dealDetail(): void {
+  const s = $('scr-detail')
+  if (!s) return
+  s.classList.remove('dealing')
+  void s.offsetWidth
+  s.classList.add('dealing')
+  setTimeout(() => s.classList.remove('dealing'), 900)
 }
 
 /* ───────── setup screen ───────── */
@@ -163,7 +172,6 @@ function movePlayer(i: number, d: number): void {
   renderSetup()
 }
 function startGame(): void {
-  enableMotion() // this is a user gesture — a good moment to ask iOS for motion access
   M.startGame(G())
   rearrange = false
   swapSel = null
@@ -439,7 +447,7 @@ function renderGame(): void {
         </div>
         <div class="hero">
           <div class="kat">ライフ</div>
-          <div class="num"><span class="heronum" id="life-${idx}">${lb.value}</span><span class="of"> /${lb.max}</span></div>
+          <div class="num"><span class="heronum" id="life-${idx}">${lb.value}</span><span class="of">/${lb.max}</span></div>
         </div>
         <div class="hpbar"><i class="gfill" id="gfill-${idx}" style="width:${pct}%"></i><i class="fill" id="fill-${idx}" style="width:${pct}%"></i></div>
         ${cmds}
@@ -465,7 +473,22 @@ function renderGame(): void {
 
   grid.innerHTML = `<div class="mainwrap">${panelHtml}</div>`
   const pe = grid.querySelector('.panel') as HTMLElement | null
-  if (pe) attachPanel(pe)
+  if (pe) {
+    attachPanel(pe)
+    centerSpeed(pe)
+  }
+}
+
+/* center the background speed-line circle on the whole number group (value + /max) */
+function centerSpeed(pe: HTMLElement): void {
+  const numEl = pe.querySelector('.num') as HTMLElement | null
+  const speed = pe.querySelector('.speed') as HTMLElement | null
+  if (!numEl || !speed) return
+  const pr = pe.getBoundingClientRect()
+  const nr = numEl.getBoundingClientRect()
+  if (!pr.width || !pr.height) return
+  speed.style.left = ((nr.left + nr.width / 2 - pr.left) / pr.width) * 100 + '%'
+  speed.style.top = ((nr.top + nr.height / 2 - pr.top) / pr.height) * 100 + '%'
 }
 
 function chipTap(i: number): void {
@@ -829,19 +852,29 @@ function setAnim(k: 'slide' | 'walk' | 'slash'): void {
 }
 
 /* ───────── detail ───────── */
+/* bar-type flavour for the STATUS menu: English label + katakana + icon */
+const barMeta: Record<string, { eng: string; kat: string; ic: string }> = {
+  life: { eng: 'HEALTH', kat: 'ライフ', ic: ICON.heart },
+  extra: { eng: 'EXTRA', kat: '予備', ic: ICON.heart },
+  cmd: { eng: 'COMMANDER', kat: '統率者', ic: ICON.shield },
+  poison: { eng: 'POISON', kat: '毒', ic: ICON.droplet },
+  energy: { eng: 'ENERGY', kat: '電力', ic: ICON.bolt },
+  custom: { eng: 'COUNTER', kat: '計数', ic: ICON.diamond },
+  token: { eng: 'TOKEN', kat: 'トークン', ic: ICON.token },
+}
 function renderDetail(): void {
+  $('scr-detail')?.classList.remove('dealing') // inner re-renders (± / rename) never replay the deal
   const g = G()
   const p = g.players[detailIdx]
   const cols = p.colors
-  const deadBanner = p.dead
-    ? `<div style="text-align:center;font-family:'Cinzel',serif;font-weight:900;letter-spacing:3px;color:#e8927c;border:1px solid #8a3324;border-radius:12px;padding:10px;background:rgba(60,15,10,.35)">YOU'VE LOST — resurrect from the battlefield</div>`
-    : ''
+  const deadBanner = p.dead ? `<div class="deadbanner">☠ やられた · K.O. — resurrect from the battlefield</div>` : ''
   const bars = p.bars
     .map((b, bi) => {
       const pct = clamp((b.value / b.max) * 100, 0, 100)
-      const ren = b.type !== 'life' ? `<div class="del" style="color:#6b5527" onclick="HB.renameBar(${bi})" aria-label="Rename bar">${icon(ICON.pencil, 'icon icon-sm')}</div>` : ''
+      const m = barMeta[b.type] || barMeta.custom
+      const ren = b.type !== 'life' ? `<div class="del" onclick="HB.renameBar(${bi})" aria-label="Rename bar">${icon(ICON.pencil, 'icon icon-sm')}</div>` : ''
       const del = b.type !== 'life' ? `<div class="del" onclick="HB.delBar(${bi})" aria-label="Delete bar">${icon(ICON.trash, 'icon icon-sm')}</div>` : ''
-      const val = b.type === 'token' ? `<div class="pt">${M.tokPT(b)}<span class="den"> ×${b.count}</span></div>` : `<div class="pt">${b.value}<span class="den"> / ${b.max}</span></div>`
+      const val = b.type === 'token' ? `${M.tokPT(b)}<span class="den"> ×${b.count}</span>` : `${b.value}<span class="den"> /${b.max}</span>`
       let ctrl = ''
       if (b.type === 'life' || b.type === 'extra')
         ctrl = `<div class="b minus" onclick="HB.chgBar(${bi},-5)">−5</div><div class="b minus" onclick="HB.chgBar(${bi},-1)">−1</div><div class="b plus" onclick="HB.chgBar(${bi},1)">+1</div><div class="b plus" onclick="HB.chgBar(${bi},5)">+5</div><div class="b x" onclick="HB.openKeypad(${bi})">±X</div>`
@@ -849,11 +882,17 @@ function renderDetail(): void {
         ctrl = `<div class="b minus" onclick="HB.chgBar(${bi},-1)">− hp</div><div class="b plus" onclick="HB.chgBar(${bi},1)">+ hp</div><div class="b minus" onclick="HB.chgTok(${bi},-1)">− tok</div><div class="b plus" onclick="HB.chgTok(${bi},1)">+ tok</div>
           </div><div class="ctrl"><div class="b plus" onclick="HB.chgCtr(${bi},1)">+1/+1</div><div class="b minus" onclick="HB.chgCtr(${bi},-1)">−1/−1</div>`
       else ctrl = `<div class="b minus" onclick="HB.chgBar(${bi},-1)">−1</div><div class="b plus" onclick="HB.chgBar(${bi},1)">+1</div><div class="b x" onclick="HB.openKeypad(${bi})">±X</div>`
-      return `<div class="cardbar" style="background:${frameGrad(cols)}">
-        <div class="head">
-          <div class="btitle"><div class="bname">${esc(b.name)}${b.type === 'token' ? ' ×' + b.count : ''}</div>${ren}${del}</div>${val}
+      return `<div class="cardbar t-${b.type}">
+        <div class="chead">
+          <div class="cicon">${icon(m.ic)}</div>
+          <div class="cnames">
+            <div class="ckat">${m.eng} <span class="jp">${m.kat}</span></div>
+            <div class="bname">${esc(b.name)}</div>
+          </div>
+          <div class="cval">${val}</div>
+          <div class="cacts">${ren}${del}</div>
         </div>
-        <div class="track"><div class="fill" style="width:${pct}%;background:${fillGrad(cols)}"></div></div>
+        <div class="track"><div class="fill" style="width:${pct}%"></div></div>
         <div class="ctrl">${ctrl}</div>
       </div>`
     })
@@ -862,7 +901,10 @@ function renderDetail(): void {
   $('scr-detail')!.innerHTML = `
     <div class="appbar">
       <div class="iconbtn" onclick="HB.show('game')" aria-label="Back">${icon(ICON.back)}</div>
-      <div class="title">${esc(p.name)}</div>
+      <div class="dtitle">
+        <span class="dname">${esc(p.name)}</span>
+        <span class="dkat">ステータス · STATUS</span>
+      </div>
       ${idBadgeHTML(cols, 22)}
       <div class="spacer"></div>
       <div class="iconbtn" onclick="HB.openEdit(${detailIdx},'detail')" aria-label="Edit planeswalker">${icon(ICON.pencil)}</div>
@@ -871,7 +913,7 @@ function renderDetail(): void {
       ${deadBanner}
       ${bars}
       <div class="addbar" onclick="HB.openAddBar(${detailIdx},'detail')">${icon(ICON.plus)} SUMMON ANOTHER BAR</div>
-      <div style="text-align:center;font-style:italic;color:var(--fg-dim);font-size:12.5px">commander damage · poison · energy · tokens · extra health</div>
+      <div class="detailfoot">summon · commander · poison · energy · tokens · extra health</div>
     </div>`
 }
 async function renameBar(bi: number): Promise<void> {
@@ -1071,45 +1113,6 @@ function buildShell(): void {
   </div>`
 }
 
-/* ───────── depth: 3D tilt of the board toward the pointer / device tilt ───────── */
-let motionEnabled = false
-function tiltBoard(rx: number, ry: number): void {
-  const mw = document.querySelector('.mainwrap') as HTMLElement | null
-  if (mw) mw.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`
-}
-function wireDepth(): void {
-  const MAX = 6
-  if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
-    let raf = 0
-    window.addEventListener('pointermove', (e) => {
-      if (curScreen !== 'game' || raf) return
-      raf = requestAnimationFrame(() => {
-        raf = 0
-        const w = window.innerWidth
-        const h = window.innerHeight
-        tiltBoard(-((e.clientY - h / 2) / (h / 2)) * MAX, ((e.clientX - w / 2) / (w / 2)) * MAX)
-      })
-    })
-  }
-  window.addEventListener('deviceorientation', (e) => {
-    if (!motionEnabled || curScreen !== 'game') return
-    const c = (v: number) => Math.max(-MAX, Math.min(MAX, v))
-    tiltBoard(c(((e.beta || 0) - 42) / 5), c((e.gamma || 0) / 5))
-  })
-}
-/* iOS 13+ needs an explicit permission from a user gesture before motion events fire */
-function enableMotion(): void {
-  if (motionEnabled) return
-  const DOE = (window as unknown as { DeviceOrientationEvent?: { requestPermission?: () => Promise<string> } }).DeviceOrientationEvent
-  if (DOE && typeof DOE.requestPermission === 'function') {
-    DOE.requestPermission()
-      .then((r) => { if (r === 'granted') motionEnabled = true })
-      .catch(() => {})
-  } else if (typeof window.DeviceOrientationEvent !== 'undefined') {
-    motionEnabled = true
-  }
-}
-
 function wireGlobalGestures(): void {
   // drawer opens from the LEFT edge / handle (swipe right or tap); avoids the bottom home-swipe
   let ex: number | null = null
@@ -1215,7 +1218,6 @@ export function boot(): void {
   const resumed = hydrate() // a saved game means a game was in progress
   $('sndbtn')?.classList.toggle('off', !store.settings.soundOn)
   wireGlobalGestures()
-  wireDepth()
   // resume the battlefield if we restored a save, otherwise open setup
   show(resumed ? 'game' : 'setup')
 }

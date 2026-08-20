@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STATUS menu — transition mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Anton&family=Dela+Gothic+One&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#ff2d95;--cyan:#12e6ff;--yel:#ffe600;--ink:#0d0b0b;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060406;color:#fff;font-family:'Rajdhani',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 14px 30px;
+  background-image:radial-gradient(ellipse 90% 70% at 50% 20%,rgba(255,255,255,.05),transparent 60%),radial-gradient(circle,rgba(255,255,255,.04) 1px,transparent 1.2px);background-size:100% 100%,7px 7px}
+h1{font-family:'Bangers';font-size:24px;letter-spacing:2px;color:var(--yel);text-shadow:0 0 12px rgba(255,230,0,.4),3px 3px 0 var(--pink)}
+.sub{color:#9a8f80;font-size:13px;margin:2px 0 16px}
+.picker{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.pick{font-family:'Dela Gothic One';font-size:12px;letter-spacing:1px;color:#efe7d6;background:rgba(255,255,255,.05);
+  border:2px solid rgba(255,255,255,.2);border-radius:10px;padding:9px 14px;cursor:pointer}
+.pick.sel{color:var(--ink);background:var(--yel);border-color:var(--yel)}
+.pick small{display:block;font-family:'Rajdhani';font-weight:600;font-size:10px;color:inherit;opacity:.75;letter-spacing:0}
+.replay{font-family:'Rajdhani';font-weight:700;font-size:12px;color:var(--cyan);border:2px solid var(--cyan);border-radius:10px;padding:9px 14px;background:transparent;cursor:pointer;letter-spacing:1px}
+
+/* phone stage */
+.stage{width:340px;height:600px;border:4px solid var(--ink);border-radius:26px;overflow:hidden;position:relative;background:#060406;
+  box-shadow:0 0 0 2px var(--ink),0 24px 60px rgba(0,0,0,.7),0 0 40px -10px rgba(255,45,149,.3)}
+.menu{position:absolute;inset:0;padding:12px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.mhead{display:flex;align-items:center;gap:8px;padding:2px}
+.mhead .bk{color:#f3ede0;font-size:20px}
+.mhead .ht{display:flex;flex-direction:column;line-height:1.05}
+.mhead .hn{font-family:'Dela Gothic One';font-size:16px;text-shadow:0 0 8px rgba(255,45,149,.5)}
+.mhead .hk{font-family:'Rajdhani';font-weight:700;font-size:9px;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 6px rgba(18,230,255,.5)}
+.cards{display:flex;flex-direction:column;gap:9px}
+.card{--acc:#ff2d95;position:relative;background:#100d18;border:2px solid rgba(255,255,255,.13);border-radius:12px;padding:10px 11px;
+  box-shadow:4px 4px 0 rgba(0,0,0,.85),0 0 20px -7px var(--acc);
+  background-image:radial-gradient(circle,rgba(255,255,255,.045) 1px,transparent 1.2px);background-size:6px 6px}
+.card.c-cmd{--acc:#ffe600} .card.c-poison{--acc:#7bd84a}
+.chead{display:flex;align-items:center;gap:10px}
+.cicon{flex:none;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--acc);color:var(--acc);box-shadow:0 0 10px -2px var(--acc)}
+.cicon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.cn{flex:1;min-width:0}
+.ck{font-family:'Dela Gothic One';font-size:11px;color:var(--acc);text-shadow:0 0 8px var(--acc)}
+.ck .jp{font-size:.82em;opacity:.72;margin-left:3px}
+.cnm{font-family:'Rajdhani';font-weight:600;font-size:12px;color:#cfc3b0}
+.cval{font-family:'Anton';font-size:28px;color:#fff;text-shadow:0 0 12px var(--acc),0 0 2px #fff}
+.cval .den{font-family:'Rajdhani';font-weight:700;font-size:12px;color:#9a8f80;text-shadow:none}
+.track{height:10px;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.18);border-radius:99px;overflow:hidden;margin-top:8px}
+.track i{display:block;height:100%;background:var(--acc);box-shadow:0 0 10px -1px var(--acc)}
+.ctrl{display:flex;gap:5px;margin-top:8px}
+.ctrl b{flex:1;text-align:center;padding:7px 0;border-radius:8px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.15);
+  color:#efe7d6;font-family:'Rajdhani';font-weight:700;font-size:12px}
+
+/* overlays */
+.fxover{position:absolute;inset:0;z-index:50;pointer-events:none;overflow:hidden}
+.inkbar{position:absolute;top:-15%;bottom:-15%;left:-60%;width:80%;background:linear-gradient(90deg,#0a0810,#181022);transform:skewX(-13deg);
+  box-shadow:0 0 40px rgba(255,45,149,.4);animation:inkSwipe .55s cubic-bezier(.5,0,.2,1) both}
+.inkbar::after{content:'STATUS';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) skewX(13deg) rotate(-4deg);
+  font-family:'Bangers';font-size:40px;color:var(--yel);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill;text-shadow:0 0 18px rgba(255,230,0,.6)}
+@keyframes inkSwipe{0%{left:-90%}100%{left:120%}}
+.scan{position:absolute;left:0;right:0;height:12px;background:linear-gradient(180deg,transparent,rgba(18,230,255,.9),transparent);
+  box-shadow:0 0 22px 4px rgba(18,230,255,.7);animation:scanDown .55s ease-out both}
+@keyframes scanDown{0%{top:-5%;opacity:0}10%{opacity:1}100%{top:105%;opacity:.2}}
+
+/* ── TRANSITION 1 · INK WIPE ── */
+@keyframes inkReveal{from{clip-path:polygon(-40% -20%,-10% -20%,-40% 120%,-70% 120%);opacity:.4}to{clip-path:polygon(-40% -20%,140% -20%,140% 120%,-70% 120%);opacity:1}}
+.menu.t-ink{animation:inkReveal .5s cubic-bezier(.5,0,.2,1) both}
+
+/* ── TRANSITION 2 · NEON GLITCH BOOT ── */
+.menu.t-glitch{animation:glitchIn .62s steps(1,end) both}
+@keyframes glitchIn{
+  0%{opacity:0;clip-path:inset(48% 0 48% 0);filter:hue-rotate(80deg) brightness(1.6);transform:translateX(-6px)}
+  12%{opacity:1;clip-path:inset(0 0 82% 0);transform:translateX(6px)}
+  24%{opacity:.7;clip-path:inset(35% 0 18% 0);filter:hue-rotate(-60deg);transform:translateX(-5px)}
+  36%{opacity:1;clip-path:inset(70% 0 0 0);transform:translateX(4px)}
+  46%{clip-path:inset(0 0 0 0);filter:none;transform:translateX(-2px)}
+  52%,58%{opacity:.35}
+  55%{opacity:1;transform:translateX(2px)}
+  74%{opacity:.9}
+  100%{opacity:1;transform:none}}
+
+/* ── TRANSITION 3 · CARD DEAL ── */
+.menu.t-deal .mhead{animation:dealHead .38s cubic-bezier(.2,1.1,.3,1) both}
+@keyframes dealHead{from{opacity:0;transform:translateY(-18px)}}
+.menu.t-deal .cards .card{animation:dealIn .46s cubic-bezier(.2,1.4,.35,1) both}
+@keyframes dealIn{from{opacity:0;transform:translateX(125%) rotate(7deg)}70%{transform:translateX(-4%) rotate(-1.5deg)}100%{opacity:1;transform:none}}
+.menu.t-deal .cards .card:nth-child(1){animation-delay:.05s}
+.menu.t-deal .cards .card:nth-child(2){animation-delay:.15s}
+.menu.t-deal .cards .card:nth-child(3){animation-delay:.25s}
+</style></head>
+<body>
+  <h1>STATUS MENU — TRANSITIONS</h1>
+  <div class="sub">tap a style to preview it opening · tap again to replay</div>
+  <div class="picker">
+    <div class="pick" id="p1" onclick="play(1)">① INK WIPE<small>manga panel cut</small></div>
+    <div class="pick" id="p2" onclick="play(2)">② NEON GLITCH<small>power-on boot</small></div>
+    <div class="pick" id="p3" onclick="play(3)">③ CARD DEAL<small>staggered slam-in</small></div>
+    <div class="replay" onclick="play(cur)">↻ REPLAY</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="menu" id="menu">
+      <div class="mhead">
+        <span class="bk">‹</span>
+        <div class="ht"><span class="hn">Player 1</span><span class="hk">ステータス · STATUS</span></div>
+      </div>
+      <div class="cards">
+        <div class="card c-life">
+          <div class="chead">
+            <div class="cicon"><svg viewBox="0 0 24 24"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2C10.5 3.5 9.3 3 7.5 3A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></svg></div>
+            <div class="cn"><div class="ck">HEALTH <span class="jp">ライフ</span></div><div class="cnm">Health</div></div>
+            <div class="cval">34<span class="den"> /40</span></div>
+          </div>
+          <div class="track"><i style="width:85%"></i></div>
+          <div class="ctrl"><b>−5</b><b>−1</b><b>+1</b><b>+5</b><b style="background:var(--yel);color:#0d0b0b;border-color:var(--yel)">±X</b></div>
+        </div>
+        <div class="card c-cmd">
+          <div class="chead">
+            <div class="cicon"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div>
+            <div class="cn"><div class="ck">COMMANDER <span class="jp">統率者</span></div><div class="cnm">Commander</div></div>
+            <div class="cval">18<span class="den"> /21</span></div>
+          </div>
+          <div class="track"><i style="width:86%"></i></div>
+          <div class="ctrl"><b>−1</b><b>+1</b><b style="background:var(--yel);color:#0d0b0b;border-color:var(--yel)">±X</b></div>
+        </div>
+        <div class="card c-poison">
+          <div class="chead">
+            <div class="cicon"><svg viewBox="0 0 24 24"><path d="M12 2.4C9.2 7.2 5.8 10.4 5.8 14.4a6.2 6.2 0 0 0 12.4 0c0-4-3.4-7.2-6.2-12z"/></svg></div>
+            <div class="cn"><div class="ck">POISON <span class="jp">毒</span></div><div class="cnm">Poison Counters</div></div>
+            <div class="cval">3<span class="den"> /10</span></div>
+          </div>
+          <div class="track"><i style="width:30%"></i></div>
+          <div class="ctrl"><b>−1</b><b>+1</b><b style="background:var(--yel);color:#0d0b0b;border-color:var(--yel)">±X</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let cur=1;
+function setSel(n){ cur=n; [1,2,3].forEach(i=>document.getElementById('p'+i).classList.toggle('sel',i===n)); }
+function play(n){
+  const menu=document.getElementById('menu'), stage=document.getElementById('stage');
+  menu.className='menu';
+  stage.querySelectorAll('.fxover').forEach(e=>e.remove());
+  void menu.offsetWidth;
+  if(n===1){ menu.classList.add('t-ink'); const o=fx(); o.innerHTML='<div class="inkbar"></div>'; setTimeout(()=>o.remove(),620); }
+  if(n===2){ menu.classList.add('t-glitch'); const o=fx(); o.innerHTML='<div class="scan"></div>'; setTimeout(()=>o.remove(),650); }
+  if(n===3){ menu.classList.add('t-deal'); }
+  setSel(n);
+}
+function fx(){ const o=document.createElement('div'); o.className='fxover'; document.getElementById('stage').appendChild(o); return o; }
+play(1);
+</script>
+</body></html>
